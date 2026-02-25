@@ -1,0 +1,1007 @@
+{
+  "info": {
+    "name": "Orderwala API Collection",
+    "description": "Complete API collection for Orderwala food delivery platform. Includes Authentication, Products, Orders, Cart, Payments, Delivery, Vendors, Maps, and Admin endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api" },
+    { "key": "backend_url", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "user_id", "value": "" },
+    { "key": "vendor_id", "value": "" },
+    { "key": "product_id", "value": "" },
+    { "key": "order_id", "value": "" },
+    { "key": "category_id", "value": "" },
+    { "key": "address_id", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Sign Up - Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/signup", "host": ["{{base_url}}"], "path": ["auth", "signup"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+919876543210\",\n  \"password\": \"SecurePass123\",\n  \"role\": \"customer\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "}",
+                  "if (jsonData.user && jsonData.user.id) {",
+                  "    pm.collectionVariables.set('user_id', jsonData.user.id);",
+                  "}",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign Up - Vendor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/signup", "host": ["{{base_url}}"], "path": ["auth", "signup"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pizza Palace\",\n  \"email\": \"vendor@example.com\",\n  \"phone\": \"+919876543211\",\n  \"password\": \"VendorPass123\",\n  \"role\": \"vendor\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sign Up - Delivery Partner",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/signup", "host": ["{{base_url}}"], "path": ["auth", "signup"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Delivery Person\",\n  \"email\": \"delivery@example.com\",\n  \"phone\": \"+919876543212\",\n  \"password\": \"DeliveryPass123\",\n  \"role\": \"delivery\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login - Email/Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "}",
+                  "if (jsonData.user && jsonData.user.id) {",
+                  "    pm.collectionVariables.set('user_id', jsonData.user.id);",
+                  "}",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Has token', function () {",
+                  "    pm.expect(jsonData.token).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/send-otp", "host": ["{{base_url}}"], "path": ["auth", "send-otp"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+919876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/verify-otp", "host": ["{{base_url}}"], "path": ["auth", "verify-otp"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+919876543210\",\n  \"otp\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/forgot-password", "host": ["{{base_url}}"], "path": ["auth", "forgot-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/reset-password", "host": ["{{base_url}}"], "path": ["auth", "reset-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset_token_here\",\n  \"password\": \"NewPassword123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛍️ Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/products?page=1&limit=20&sortBy=created_at&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "sortBy", "value": "created_at" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0) {",
+                  "    pm.collectionVariables.set('product_id', jsonData.data[0]._id || jsonData.data[0].id);",
+                  "}",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Has products array', function () {",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Products by Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/products?category={{category_id}}&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "category", "value": "{{category_id}}" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/products?search=pizza&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "search", "value": "pizza" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Featured Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/products?featured=true&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "featured", "value": "true" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Create Product (Vendor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Margherita Pizza\",\n  \"description\": \"Classic Italian pizza with fresh mozzarella and basil\",\n  \"price\": 299,\n  \"category_id\": \"{{category_id}}\",\n  \"image\": \"https://example.com/pizza.jpg\",\n  \"is_veg\": true,\n  \"preparation_time\": 20,\n  \"variants\": [\n    { \"name\": \"Small\", \"price\": 199 },\n    { \"name\": \"Medium\", \"price\": 299 },\n    { \"name\": \"Large\", \"price\": 399 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Product (Vendor)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 349,\n  \"is_available\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Product (Vendor)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📂 Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}}"], "path": ["categories"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0) {",
+                  "    pm.collectionVariables.set('category_id', jsonData.data[0].id || jsonData.data[0]._id);",
+                  "}",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Category by Slug",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/categories?slug=pizza", "host": ["{{base_url}}"], "path": ["categories"], "query": [{"key": "slug", "value": "pizza"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cart", "host": ["{{base_url}}"], "path": ["cart"] }
+          }
+        },
+        {
+          "name": "Add Item to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/cart", "host": ["{{base_url}}"], "path": ["cart"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"vendorId\": \"{{vendor_id}}\",\n  \"quantity\": 2,\n  \"variant\": \"Medium\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/cart/{{product_id}}", "host": ["{{base_url}}"], "path": ["cart", "{{product_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove Item from Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cart/{{product_id}}", "host": ["{{base_url}}"], "path": ["cart", "{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cart", "host": ["{{base_url}}"], "path": ["cart"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"{{vendor_id}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{product_id}}\",\n      \"quantity\": 2,\n      \"variant\": \"Medium\",\n      \"price\": 299\n    }\n  ],\n  \"deliveryAddress\": {\n    \"street\": \"123 Main Street\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pincode\": \"400001\",\n    \"phone\": \"+919876543210\",\n    \"lat\": 19.0760,\n    \"lng\": 72.8777\n  },\n  \"paymentMethod\": \"razorpay\",\n  \"promoCode\": \"\",\n  \"specialInstructions\": \"Extra spicy please\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('order_id', jsonData.data._id);",
+                  "}",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/orders?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Update Order Status (Vendor)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cancelled\",\n  \"cancellation_reason\": \"Changed my mind\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💳 Payments",
+      "item": [
+        {
+          "name": "Create Razorpay Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/payments/create-order", "host": ["{{base_url}}"], "path": ["payments", "create-order"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"amount\": 598\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify Razorpay Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/payments/verify", "host": ["{{base_url}}"], "path": ["payments", "verify"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"razorpay_order_id\": \"order_xxxxx\",\n  \"razorpay_payment_id\": \"pay_xxxxx\",\n  \"razorpay_signature\": \"signature_xxxxx\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Wallet Balance",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/wallet", "host": ["{{base_url}}"], "path": ["wallet"] }
+          }
+        },
+        {
+          "name": "Get Wallet Transactions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/wallet/transactions?page=1&limit=20", "host": ["{{base_url}}"], "path": ["wallet", "transactions"], "query": [{"key": "page", "value": "1"}, {"key": "limit", "value": "20"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 User Profile",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/users/profile", "host": ["{{base_url}}"], "path": ["users", "profile"] }
+          }
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/users/profile", "host": ["{{base_url}}"], "path": ["users", "profile"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Updated\",\n  \"phone\": \"+919876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/users/change-password", "host": ["{{base_url}}"], "path": ["users", "change-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"SecurePass123\",\n  \"newPassword\": \"NewSecurePass456\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📍 Addresses",
+      "item": [
+        {
+          "name": "Get All Addresses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/addresses", "host": ["{{base_url}}"], "path": ["addresses"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0) {",
+                  "    pm.collectionVariables.set('address_id', jsonData.data[0].id || jsonData.data[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add New Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/addresses", "host": ["{{base_url}}"], "path": ["addresses"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"home\",\n  \"name\": \"Home\",\n  \"address\": \"123 Main Street, Apartment 4B\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400001\",\n  \"phone\": \"+919876543210\",\n  \"lat\": 19.0760,\n  \"lng\": 72.8777,\n  \"isDefault\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/addresses/{{address_id}}", "host": ["{{base_url}}"], "path": ["addresses", "{{address_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"work\",\n  \"name\": \"Office\",\n  \"address\": \"456 Business Park\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/addresses/{{address_id}}", "host": ["{{base_url}}"], "path": ["addresses", "{{address_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏪 Vendors",
+      "item": [
+        {
+          "name": "Get All Vendors",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/vendors?page=1&limit=20", "host": ["{{base_url}}"], "path": ["vendors"], "query": [{"key": "page", "value": "1"}, {"key": "limit", "value": "20"}] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0) {",
+                  "    pm.collectionVariables.set('vendor_id', jsonData.data[0].id || jsonData.data[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Nearby Vendors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/vendors?lat=19.0760&lng=72.8777&radius=5",
+              "host": ["{{base_url}}"],
+              "path": ["vendors"],
+              "query": [
+                { "key": "lat", "value": "19.0760" },
+                { "key": "lng", "value": "72.8777" },
+                { "key": "radius", "value": "5" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Vendor by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/vendors/{{vendor_id}}", "host": ["{{base_url}}"], "path": ["vendors", "{{vendor_id}}"] }
+          }
+        },
+        {
+          "name": "Get Vendor Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/vendors/{{vendor_id}}/products", "host": ["{{base_url}}"], "path": ["vendors", "{{vendor_id}}", "products"] }
+          }
+        },
+        {
+          "name": "Vendor Dashboard (Vendor Auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/vendor/dashboard", "host": ["{{base_url}}"], "path": ["vendor", "dashboard"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚚 Delivery",
+      "item": [
+        {
+          "name": "Get Delivery Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/delivery/orders", "host": ["{{base_url}}"], "path": ["delivery", "orders"] }
+          }
+        },
+        {
+          "name": "Get Nearby Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/delivery/nearby?lat=19.0760&lng=72.8777",
+              "host": ["{{base_url}}"],
+              "path": ["delivery", "nearby"],
+              "query": [
+                { "key": "lat", "value": "19.0760" },
+                { "key": "lng", "value": "72.8777" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Accept Delivery Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/delivery/orders/{{order_id}}/accept", "host": ["{{base_url}}"], "path": ["delivery", "orders", "{{order_id}}", "accept"] }
+          }
+        },
+        {
+          "name": "Update Delivery Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/delivery/location", "host": ["{{base_url}}"], "path": ["delivery", "location"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": 19.0760,\n  \"lng\": 72.8777,\n  \"orderId\": \"{{order_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Delivery Earnings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/delivery/earnings", "host": ["{{base_url}}"], "path": ["delivery", "earnings"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⭐ Reviews",
+      "item": [
+        {
+          "name": "Get Product Reviews",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/reviews?productId={{product_id}}", "host": ["{{base_url}}"], "path": ["reviews"], "query": [{"key": "productId", "value": "{{product_id}}"}] }
+          }
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/reviews", "host": ["{{base_url}}"], "path": ["reviews"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"productId\": \"{{product_id}}\",\n  \"vendorId\": \"{{vendor_id}}\",\n  \"rating\": 5,\n  \"comment\": \"Amazing food! Fast delivery.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "❤️ Favorites",
+      "item": [
+        {
+          "name": "Get Favorites",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/favorites", "host": ["{{base_url}}"], "path": ["favorites"] }
+          }
+        },
+        {
+          "name": "Add to Favorites",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/favorites", "host": ["{{base_url}}"], "path": ["favorites"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"{{vendor_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove from Favorites",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/favorites/{{vendor_id}}", "host": ["{{base_url}}"], "path": ["favorites", "{{vendor_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎫 Promo Codes",
+      "item": [
+        {
+          "name": "Get Active Promos",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/promo-codes", "host": ["{{base_url}}"], "path": ["promo-codes"] }
+          }
+        },
+        {
+          "name": "Validate Promo Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/promo-codes/validate", "host": ["{{base_url}}"], "path": ["promo-codes", "validate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME50\",\n  \"orderTotal\": 500\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗺️ Maps & Location",
+      "item": [
+        {
+          "name": "Geocode Address",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/maps/geocode", "host": ["{{base_url}}"], "path": ["maps", "geocode"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"123 Main Street, Mumbai, Maharashtra\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reverse Geocode",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/maps/reverse-geocode", "host": ["{{base_url}}"], "path": ["maps", "reverse-geocode"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": 19.0760,\n  \"lng\": 72.8777\n}"
+            }
+          }
+        },
+        {
+          "name": "Calculate Distance",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/maps/distance", "host": ["{{base_url}}"], "path": ["maps", "distance"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": { \"lat\": 19.0760, \"lng\": 72.8777 },\n  \"destination\": { \"lat\": 19.1136, \"lng\": 72.8697 }\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔔 Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/notifications?page=1&limit=20", "host": ["{{base_url}}"], "path": ["notifications"], "query": [{"key": "page", "value": "1"}, {"key": "limit", "value": "20"}] }
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/notifications/mark-read", "host": ["{{base_url}}"], "path": ["notifications", "mark-read"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 Admin",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/login", "host": ["{{base_url}}"], "path": ["admin", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@orderwala.in\",\n  \"password\": \"AdminPass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/dashboard", "host": ["{{base_url}}"], "path": ["admin", "dashboard"] }
+          }
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/customers?page=1&limit=20", "host": ["{{base_url}}"], "path": ["admin", "customers"], "query": [{"key": "page", "value": "1"}, {"key": "limit", "value": "20"}] }
+          }
+        },
+        {
+          "name": "Get All Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/orders?page=1&limit=20", "host": ["{{base_url}}"], "path": ["admin", "orders"], "query": [{"key": "page", "value": "1"}, {"key": "limit", "value": "20"}] }
+          }
+        },
+        {
+          "name": "Get Reports (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/reports?period=monthly", "host": ["{{base_url}}"], "path": ["admin", "reports"], "query": [{"key": "period", "value": "monthly"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "❤️‍🩹 Health Check",
+      "item": [
+        {
+          "name": "Frontend Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('API is healthy', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Backend Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{backend_url}}/health", "host": ["{{backend_url}}"], "path": ["health"] }
+          }
+        }
+      ]
+    }
+  ]
+}

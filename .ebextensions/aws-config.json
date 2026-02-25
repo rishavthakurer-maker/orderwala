@@ -1,0 +1,46 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS Elastic Beanstalk configuration for Orderwala Node.js Backend",
+  "Resources": {
+    "EBEnvironment": {
+      "Type": "AWS::ElasticBeanstalk::Environment",
+      "Properties": {
+        "ApplicationName": "orderwala-backend",
+        "EnvironmentName": "orderwala-production",
+        "SolutionStackName": "64bit Amazon Linux 2023 v6.0.3 running Node.js 18",
+        "OptionSettings": [
+          {
+            "Namespace": "aws:autoscaling:launchconfiguration",
+            "OptionName": "InstanceType",
+            "Value": "t3.medium"
+          },
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MinSize",
+            "Value": "2"
+          },
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MaxSize",
+            "Value": "6"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:application",
+            "OptionName": "Application Healthcheck URL",
+            "Value": "/health"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:cloudwatch:logs",
+            "OptionName": "StreamLogs",
+            "Value": "true"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:cloudwatch:logs",
+            "OptionName": "DeleteOnTerminate",
+            "Value": "false"
+          }
+        ]
+      }
+    }
+  }
+}

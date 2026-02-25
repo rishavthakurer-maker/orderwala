@@ -1,0 +1,16 @@
+# Ignore files not needed in deployment
+node_modules/
+src/
+*.ts
+!dist/**/*.js
+.env
+.env.local
+*.md
+.git/
+.github/
+tests/
+__tests__/
+coverage/
+postman-collection.json
+BACKEND_SETUP.md
+README.md
