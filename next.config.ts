@@ -78,22 +78,9 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Rewrites
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: '/api/:path*',
-          destination: process.env.NEXT_PUBLIC_API_URL + '/api/:path*',
-        },
-      ],
-    };
-  },
-
   // Environment variables
   env: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 };
 
