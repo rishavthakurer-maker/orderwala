@@ -83,8 +83,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: 'OTP sent successfully',
-      // In production, remove this:
-      otp: process.env.NODE_ENV === 'development' ? otp : undefined,
+      // SMS provider not configured yet - return OTP to client
+      otp,
     });
   } catch (error) {
     console.error('Send OTP error:', error);

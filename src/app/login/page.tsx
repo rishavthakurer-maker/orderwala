@@ -58,14 +58,19 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        toast.error(result.error);
-      } else {
+        const errorMsg = result.error === 'CredentialsSignin'
+          ? 'Invalid email or password. If you signed up with Google, please use Google login.'
+          : result.error;
+        toast.error(errorMsg);
+      } else if (result?.ok) {
         toast.success('Login successful!');
         router.push('/');
         router.refresh();
+      } else {
+        toast.error('Login failed. Please try again.');
       }
     } catch (error) {
-      toast.error('Something went wrong');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -90,9 +95,9 @@ export default function LoginPage() {
       setOtpSent(true);
       toast.success('OTP sent to your phone');
       
-      // Show OTP in development
+      // Show OTP (SMS not yet configured)
       if (result.otp) {
-        toast.success(`Dev OTP: ${result.otp}`, { duration: 10000 });
+        toast(`Your OTP is: ${result.otp}`, { duration: 15000, icon: '🔑' });
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'An error occurred');
