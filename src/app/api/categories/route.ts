@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
 
     let query: FirebaseFirestore.Query = db
       .collection(Collections.CATEGORIES)
-      .orderBy('sort_order', 'asc')
-      .orderBy('name', 'asc');
+      .orderBy('sort_order', 'asc');
 
     if (isActive === 'true') {
       query = query.where('is_active', '==', true);

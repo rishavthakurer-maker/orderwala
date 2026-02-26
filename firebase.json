@@ -9,5 +9,8 @@
     "frameworksBackend": {
       "region": "asia-south1"
     }
+  },
+  "firestore": {
+    "indexes": "firestore.indexes.json"
   }
 }
