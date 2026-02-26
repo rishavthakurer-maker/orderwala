@@ -2,18 +2,18 @@ name: Frontend CI — Lint & Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
     paths-ignore:
       - 'backend/**'
       - '*.md'
   pull_request:
-    branches: [main]
+    branches: [main, master]
     paths-ignore:
       - 'backend/**'
       - '*.md'
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '24'
 
 jobs:
   build:
@@ -42,10 +42,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: https://orderwala.in
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          NEXTAUTH_URL: https://orderwala-8ac2b.web.app
 
-      # Vercel handles deployment via Git integration —
+      # Firebase Hosting deployment is done via Firebase CLI —
       # this workflow only validates the build.

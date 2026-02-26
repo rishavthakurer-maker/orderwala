@@ -1,17 +1,13 @@
-name: Frontend (Vercel) Deployment
+name: Firebase Hosting Deployment
 
 on:
   push:
     branches:
       - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
+      - master
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
@@ -20,40 +16,22 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
           cache: 'npm'
       
       - name: Install dependencies
         run: npm ci
       
-      - name: Run linting
-        run: npm run lint
-      
       - name: Build project
-        run: npm run build
+        run: npm run build -- --webpack
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          NEXT_PUBLIC_RAZORPAY_KEY_ID: ${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NEXTAUTH_URL: https://orderwala-8ac2b.web.app
       
-      - name: Deploy to Vercel
-        if: github.ref == 'refs/heads/main'
-        uses: vercel/action@master
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          production: true
-      
-      - name: Deploy Preview to Vercel
-        if: github.ref == 'refs/heads/develop'
-        uses: vercel/action@master
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          production: false
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: orderwala-8ac2b
