@@ -35,9 +35,6 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# vercel
-.vercel
-
 # firebase
 .firebase
 firebase-debug.log
@@ -46,9 +43,6 @@ deploy-debug.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-auth-check.txt
-cr-desc.json
-cr-errors.json
-env_val.txt
-set-vercel-env.js
-tmpval.txt
+
+# build helper
+_fix_symlink.cjs
