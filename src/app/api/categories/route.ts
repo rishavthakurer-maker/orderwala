@@ -1,45 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase';
-import type { Database } from '@/lib/supabase/types';
-
-type Category = Database['public']['Tables']['categories']['Row'];
+import { getDb, Collections, generateId } from '@/lib/firebase';
 
 // GET /api/categories - Get all categories
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     const { searchParams } = new URL(request.url);
     const isActive = searchParams.get('isActive');
 
-    let query = supabase
-      .from('categories')
-      .select('*')
-      .order('sort_order', { ascending: true })
-      .order('name', { ascending: true });
+    let query: FirebaseFirestore.Query = db
+      .collection(Collections.CATEGORIES)
+      .orderBy('sort_order', 'asc')
+      .orderBy('name', 'asc');
 
     if (isActive === 'true') {
-      query = query.eq('is_active', true);
+      query = query.where('is_active', '==', true);
     }
 
-    const { data: categories, error } = await query;
-
-    if (error) throw error;
+    const snapshot = await query.get();
 
     // Transform to match frontend expectations
-    const transformedCategories = categories?.map((cat: Category) => ({
-      _id: cat.id,
-      name: cat.name,
-      slug: cat.slug,
-      description: cat.description,
-      image: cat.image,
-      icon: cat.icon,
-      parentCategory: cat.parent_category_id,
-      isActive: cat.is_active,
-      sortOrder: cat.sort_order,
-      createdAt: cat.created_at,
-      updatedAt: cat.updated_at,
-    }));
+    const transformedCategories = snapshot.docs.map((doc) => {
+      const cat = doc.data();
+      return {
+        _id: doc.id,
+        name: cat.name,
+        slug: cat.slug,
+        description: cat.description,
+        image: cat.image,
+        icon: cat.icon,
+        parentCategory: cat.parent_category_id,
+        isActive: cat.is_active,
+        sortOrder: cat.sort_order,
+        createdAt: cat.created_at,
+        updatedAt: cat.updated_at,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -57,7 +54,7 @@ export async function GET(request: NextRequest) {
 // POST /api/categories - Create a new category
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const body = await request.json();
 
     // Validate required fields
@@ -72,38 +69,39 @@ export async function POST(request: NextRequest) {
     const slug = body.slug || body.name.toLowerCase().replace(/\s+/g, '-');
 
     // Check if slug already exists
-    const { data: existingCategory } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('slug', slug)
-      .single();
+    const existingSnapshot = await db
+      .collection(Collections.CATEGORIES)
+      .where('slug', '==', slug)
+      .limit(1)
+      .get();
 
-    if (existingCategory) {
+    if (!existingSnapshot.empty) {
       return NextResponse.json(
         { success: false, error: 'Category with this name already exists' },
         { status: 400 }
       );
     }
 
-    const { data: category, error } = await supabase
-      .from('categories')
-      .insert({
-        name: body.name,
-        slug,
-        description: body.description,
-        image: body.image || 'https://via.placeholder.com/400',
-        icon: body.icon,
-        parent_category_id: body.parentCategory,
-        is_active: body.isActive ?? true,
-        sort_order: body.sortOrder ?? 0,
-      })
-      .select()
-      .single();
+    const id = generateId();
+    const now = new Date().toISOString();
 
-    if (error) throw error;
+    const categoryData = {
+      name: body.name,
+      slug,
+      description: body.description || null,
+      image: body.image || 'https://via.placeholder.com/400',
+      icon: body.icon || null,
+      parent_category_id: body.parentCategory || null,
+      is_active: body.isActive ?? true,
+      sort_order: body.sortOrder ?? 0,
+      created_at: now,
+      updated_at: now,
+    };
+
+    await db.collection(Collections.CATEGORIES).doc(id).set(categoryData);
 
     return NextResponse.json(
-      { success: true, data: { _id: category.id, ...category } },
+      { success: true, data: { _id: id, id, ...categoryData } },
       { status: 201 }
     );
   } catch (error) {

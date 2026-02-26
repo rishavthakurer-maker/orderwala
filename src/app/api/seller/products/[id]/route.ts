@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // PUT /api/seller/products/[id] - Update a product
@@ -11,32 +11,32 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single();
+    const vendorSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
 
-    if (!vendor) {
+    if (vendorSnap.empty) {
       return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
     }
 
-    // Verify product belongs to this vendor
-    const { data: existingProduct } = await supabase
-      .from('products')
-      .select('id')
-      .eq('id', id)
-      .eq('vendor_id', vendor.id)
-      .single();
+    const vendor = { id: vendorSnap.docs[0].id };
 
-    if (!existingProduct) {
+    // Verify product belongs to this vendor
+    const productDoc = await db.collection(Collections.PRODUCTS).doc(id).get();
+    if (!productDoc.exists) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+
+    const existingProduct = productDoc.data() as Record<string, unknown>;
+    if (existingProduct.vendor_id !== vendor.id) {
       return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
     }
 
     const body = await request.json();
-    const updateData: Record<string, unknown> = {};
+    const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
     if (body.name !== undefined) updateData.name = body.name;
     if (body.description !== undefined) updateData.description = body.description;
@@ -50,16 +50,22 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.isAvailable !== undefined) updateData.is_available = body.isAvailable;
     if (body.tags !== undefined) updateData.tags = body.tags;
 
-    const { data: product, error } = await supabase
-      .from('products')
-      .update(updateData)
-      .eq('id', id)
-      .select('*, category:categories(id, name, slug)')
-      .single();
+    await db.collection(Collections.PRODUCTS).doc(id).update(updateData);
 
-    if (error) throw error;
+    // Fetch updated product with category
+    const updatedDoc = await db.collection(Collections.PRODUCTS).doc(id).get();
+    const product = { id: updatedDoc.id, ...updatedDoc.data() } as Record<string, unknown>;
 
-    return NextResponse.json({ success: true, data: product });
+    let category = null;
+    if (product.category_id) {
+      const catDoc = await db.collection(Collections.CATEGORIES).doc(String(product.category_id)).get();
+      if (catDoc.exists) {
+        const data = catDoc.data() as Record<string, unknown>;
+        category = { id: catDoc.id, name: data.name, slug: data.slug };
+      }
+    }
+
+    return NextResponse.json({ success: true, data: { ...product, category } });
   } catch (error) {
     console.error('Error updating product:', error);
     return NextResponse.json({ success: false, error: 'Failed to update product' }, { status: 500 });
@@ -75,25 +81,31 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single();
+    const vendorSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
 
-    if (!vendor) {
+    if (vendorSnap.empty) {
       return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
     }
 
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id)
-      .eq('vendor_id', vendor.id);
+    const vendor = { id: vendorSnap.docs[0].id };
 
-    if (error) throw error;
+    // Verify product belongs to this vendor before deleting
+    const productDoc = await db.collection(Collections.PRODUCTS).doc(id).get();
+    if (!productDoc.exists) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+
+    const product = productDoc.data() as Record<string, unknown>;
+    if (product.vendor_id !== vendor.id) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+
+    await db.collection(Collections.PRODUCTS).doc(id).delete();
 
     return NextResponse.json({ success: true });
   } catch (error) {

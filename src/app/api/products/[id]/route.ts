@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 
 // GET /api/products/[id] - Get a single product
 export async function GET(
@@ -8,26 +8,55 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { data: product, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        category:categories(id, name, slug),
-        vendor:vendors(id, store_name, logo, phone, average_rating)
-      `)
-      .eq('id', id)
-      .single();
+    const productDoc = await db.collection(Collections.PRODUCTS).doc(id).get();
 
-    if (error || !product) {
+    if (!productDoc.exists) {
       return NextResponse.json(
         { success: false, error: 'Product not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: product });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const product: any = { id: productDoc.id, ...productDoc.data() };
+
+    // Fetch related category and vendor docs separately
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let category: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let vendor: any = null;
+
+    const [catDoc, venDoc] = await Promise.all([
+      product.category_id
+        ? db.collection(Collections.CATEGORIES).doc(product.category_id).get()
+        : Promise.resolve(null),
+      product.vendor_id
+        ? db.collection(Collections.VENDORS).doc(product.vendor_id).get()
+        : Promise.resolve(null),
+    ]);
+
+    if (catDoc && catDoc.exists) {
+      const catData = catDoc.data();
+      category = { id: catDoc.id, name: catData?.name, slug: catData?.slug };
+    }
+
+    if (venDoc && venDoc.exists) {
+      const venData = venDoc.data();
+      vendor = {
+        id: venDoc.id,
+        store_name: venData?.store_name,
+        logo: venData?.logo,
+        phone: venData?.phone,
+        average_rating: venData?.average_rating,
+      };
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: { ...product, category, vendor },
+    });
   } catch (error) {
     console.error('Error fetching product:', error);
     return NextResponse.json(
@@ -45,27 +74,57 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { data: product, error } = await supabase
-      .from('products')
-      .update(body)
-      .eq('id', id)
-      .select(`
-        *,
-        category:categories(id, name, slug),
-        vendor:vendors(id, store_name)
-      `)
-      .single();
+    const productRef = db.collection(Collections.PRODUCTS).doc(id);
+    const productDoc = await productRef.get();
 
-    if (error || !product) {
+    if (!productDoc.exists) {
       return NextResponse.json(
         { success: false, error: 'Product not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: product });
+    await productRef.update({
+      ...body,
+      updated_at: new Date().toISOString(),
+    });
+
+    // Fetch the updated product
+    const updatedDoc = await productRef.get();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const product: any = { id: updatedDoc.id, ...updatedDoc.data() };
+
+    // Fetch related category and vendor
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let category: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let vendor: any = null;
+
+    const [catDoc, venDoc] = await Promise.all([
+      product.category_id
+        ? db.collection(Collections.CATEGORIES).doc(product.category_id).get()
+        : Promise.resolve(null),
+      product.vendor_id
+        ? db.collection(Collections.VENDORS).doc(product.vendor_id).get()
+        : Promise.resolve(null),
+    ]);
+
+    if (catDoc && catDoc.exists) {
+      const catData = catDoc.data();
+      category = { id: catDoc.id, name: catData?.name, slug: catData?.slug };
+    }
+
+    if (venDoc && venDoc.exists) {
+      const venData = venDoc.data();
+      vendor = { id: venDoc.id, store_name: venData?.store_name };
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: { ...product, category, vendor },
+    });
   } catch (error) {
     console.error('Error updating product:', error);
     return NextResponse.json(
@@ -82,19 +141,22 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { error } = await supabase
-      .from('products')
-      .update({ is_active: false })
-      .eq('id', id);
+    const productRef = db.collection(Collections.PRODUCTS).doc(id);
+    const productDoc = await productRef.get();
 
-    if (error) {
+    if (!productDoc.exists) {
       return NextResponse.json(
         { success: false, error: 'Product not found' },
         { status: 404 }
       );
     }
+
+    await productRef.update({
+      is_active: false,
+      updated_at: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       success: true,

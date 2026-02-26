@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, generateId } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // GET /api/seller/store - Get current seller's store
@@ -10,16 +10,17 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
-    const { data: vendor, error } = await supabase
-      .from('vendors')
-      .select('*')
-      .eq('owner_id', session.user.id)
-      .single();
+    const db = getDb();
+    const vendorSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
 
-    if (error || !vendor) {
+    if (vendorSnap.empty) {
       return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
     }
+
+    const vendor = { id: vendorSnap.docs[0].id, ...vendorSnap.docs[0].data() };
 
     return NextResponse.json({ success: true, data: vendor });
   } catch (error) {
@@ -36,16 +37,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     // Check if vendor already has a store
-    const { data: existing } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single();
+    const existingSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
 
-    if (existing) {
+    if (!existingSnap.empty) {
       return NextResponse.json({ success: false, error: 'Store already exists' }, { status: 409 });
     }
 
@@ -61,28 +61,28 @@ export async function POST(request: NextRequest) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
 
-    const { data: vendor, error } = await supabase
-      .from('vendors')
-      .insert({
-        owner_id: session.user.id,
-        store_name: storeName,
-        slug,
-        description: description || '',
-        logo: `https://ui-avatars.com/api/?name=${encodeURIComponent(storeName)}&background=f97316&color=fff&size=200`,
-        phone,
-        email: email || session.user.email,
-        category: category || 'general',
-        address: address || { street: '', city: '', state: '', pincode: '' },
-        is_active: true,
-        is_verified: false,
-        is_open: true,
-      })
-      .select()
-      .single();
+    const now = new Date().toISOString();
+    const vendorId = generateId();
+    const vendorData = {
+      owner_id: session.user.id,
+      store_name: storeName,
+      slug,
+      description: description || '',
+      logo: `https://ui-avatars.com/api/?name=${encodeURIComponent(storeName)}&background=f97316&color=fff&size=200`,
+      phone,
+      email: email || session.user.email,
+      category: category || 'general',
+      address: address || { street: '', city: '', state: '', pincode: '' },
+      is_active: true,
+      is_verified: false,
+      is_open: true,
+      created_at: now,
+      updated_at: now,
+    };
 
-    if (error) throw error;
+    await db.collection(Collections.VENDORS).doc(vendorId).set(vendorData);
 
-    return NextResponse.json({ success: true, data: vendor }, { status: 201 });
+    return NextResponse.json({ success: true, data: { id: vendorId, ...vendorData } }, { status: 201 });
   } catch (error) {
     console.error('Error creating store:', error);
     return NextResponse.json({ success: false, error: 'Failed to create store' }, { status: 500 });
@@ -97,20 +97,21 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const body = await request.json();
 
-    const { data: vendor, error: findError } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single();
+    const vendorSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
 
-    if (findError || !vendor) {
+    if (vendorSnap.empty) {
       return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
     }
 
-    const updateData: Record<string, unknown> = {};
+    const vendorId = vendorSnap.docs[0].id;
+
+    const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (body.storeName) updateData.store_name = body.storeName;
     if (body.description !== undefined) updateData.description = body.description;
     if (body.phone) updateData.phone = body.phone;
@@ -126,14 +127,10 @@ export async function PUT(request: NextRequest) {
     if (body.openingHours) updateData.opening_hours = body.openingHours;
     if (body.bankDetails) updateData.bank_details = body.bankDetails;
 
-    const { data: updated, error } = await supabase
-      .from('vendors')
-      .update(updateData)
-      .eq('id', vendor.id)
-      .select()
-      .single();
+    await db.collection(Collections.VENDORS).doc(vendorId).update(updateData);
 
-    if (error) throw error;
+    const updatedDoc = await db.collection(Collections.VENDORS).doc(vendorId).get();
+    const updated = { id: updatedDoc.id, ...updatedDoc.data() };
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {

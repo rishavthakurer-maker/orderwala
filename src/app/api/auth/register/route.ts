@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, generateId, Collections } from '@/lib/firebase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,30 +21,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const usersCol = db.collection(Collections.USERS);
 
     // Check if user already exists
-    let existingUserQuery = supabase.from('users').select('id');
-    
+    let existingUsers: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+
     if (email && phone) {
-      existingUserQuery = existingUserQuery.or(`email.eq.${email},phone.eq.${phone}`);
+      const [byEmail, byPhone] = await Promise.all([
+        usersCol.where('email', '==', email).limit(1).get(),
+        usersCol.where('phone', '==', phone).limit(1).get(),
+      ]);
+      existingUsers = [...byEmail.docs, ...byPhone.docs];
     } else if (email) {
-      existingUserQuery = existingUserQuery.eq('email', email);
+      const snap = await usersCol.where('email', '==', email).limit(1).get();
+      existingUsers = snap.docs;
     } else if (phone) {
-      existingUserQuery = existingUserQuery.eq('phone', phone);
+      const snap = await usersCol.where('phone', '==', phone).limit(1).get();
+      existingUsers = snap.docs;
     }
 
-    const { data: existingUsers, error: existingError } = await existingUserQuery;
-
-    if (existingError) {
-      console.error('Error checking existing user:', existingError);
-      return NextResponse.json(
-        { error: 'Registration failed' },
-        { status: 500 }
-      );
-    }
-
-    if (existingUsers && existingUsers.length > 0) {
+    if (existingUsers.length > 0) {
       return NextResponse.json(
         { error: 'User with this email or phone already exists' },
         { status: 409 }
@@ -58,21 +55,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user
-    const { data: user, error: createError } = await supabase
-      .from('users')
-      .insert({
-        name,
-        email,
-        phone,
-        password_hash: hashedPassword,
-        role: ['customer', 'vendor', 'delivery'].includes(role) ? role : 'customer',
-        is_verified: false,
-        is_active: true,
-      })
-      .select()
-      .single();
+    const userId = generateId();
+    const validRole = ['customer', 'vendor', 'delivery'].includes(role) ? role : 'customer';
+    const now = new Date().toISOString();
+    const userData = {
+      name,
+      email: email || null,
+      phone: phone || null,
+      password_hash: hashedPassword || null,
+      role: validRole,
+      is_verified: false,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    };
 
-    if (createError) {
+    try {
+      await usersCol.doc(userId).set(userData);
+    } catch (createError) {
       console.error('Error creating user:', createError);
       return NextResponse.json(
         { error: 'Registration failed' },
@@ -84,11 +84,11 @@ export async function POST(request: NextRequest) {
       {
         message: 'User registered successfully',
         user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
+          id: userId,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          role: userData.role,
         },
       },
       { status: 201 }

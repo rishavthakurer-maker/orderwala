@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import crypto from 'crypto';
 
 // =============================================================================
@@ -57,33 +57,33 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const otpCol = db.collection(Collections.OTP_VERIFICATIONS);
 
     // Find the OTP record
-    const { data: otpRecord, error: otpError } = await supabase
-      .from('otp_verifications')
-      .select('*')
-      .eq('email', normalizedEmail)
-      .eq('otp', otp)
-      .eq('type', 'password_reset')
-      .eq('is_verified', false)
-      .single();
+    const otpSnap = await otpCol
+      .where('email', '==', normalizedEmail)
+      .where('otp', '==', otp)
+      .where('type', '==', 'password_reset')
+      .where('is_verified', '==', false)
+      .limit(1)
+      .get();
 
-    if (otpError || !otpRecord) {
+    if (otpSnap.empty) {
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.INVALID_OTP },
         { status: 400 }
       );
     }
 
+    const otpDoc = otpSnap.docs[0];
+    const otpRecord = otpDoc.data();
+
     // Check if OTP is expired
     const expiresAt = new Date(otpRecord.expires_at);
     if (expiresAt < new Date()) {
       // Delete expired OTP
-      await supabase
-        .from('otp_verifications')
-        .delete()
-        .eq('id', otpRecord.id);
+      await otpDoc.ref.delete();
 
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.OTP_EXPIRED },
@@ -96,16 +96,13 @@ export async function POST(request: NextRequest) {
     const tokenExpiresAt = new Date(Date.now() + TOKEN_EXPIRY_MINUTES * 60 * 1000);
 
     // Mark OTP as verified and save reset token
-    const { error: updateError } = await supabase
-      .from('otp_verifications')
-      .update({
+    try {
+      await otpDoc.ref.update({
         is_verified: true,
         reset_token: resetToken,
         token_expires_at: tokenExpiresAt.toISOString(),
-      })
-      .eq('id', otpRecord.id);
-
-    if (updateError) {
+      });
+    } catch (updateError) {
       console.error('[VerifyResetOTP] Error updating OTP record:', updateError);
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.SERVER_ERROR },

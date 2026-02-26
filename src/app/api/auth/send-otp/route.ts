@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, generateId, Collections } from '@/lib/firebase';
 
 // Generate 6 digit OTP
 function generateOTP(): string {
@@ -48,29 +48,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const otpCol = db.collection(Collections.OTP_VERIFICATIONS);
 
     // Generate OTP
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     // Delete any existing OTPs for this phone
-    await supabase
-      .from('otp_verifications')
-      .delete()
-      .eq('phone', phone);
+    const existingOtps = await otpCol.where('phone', '==', phone).get();
+    if (!existingOtps.empty) {
+      const batch = db.batch();
+      existingOtps.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+    }
 
     // Save new OTP
-    const { error: insertError } = await supabase
-      .from('otp_verifications')
-      .insert({
+    const otpId = generateId();
+    try {
+      await otpCol.doc(otpId).set({
         phone,
         otp,
         expires_at: expiresAt.toISOString(),
         is_verified: false,
+        created_at: new Date().toISOString(),
       });
-
-    if (insertError) {
+    } catch (insertError) {
       console.error('Error saving OTP:', insertError);
       return NextResponse.json(
         { error: 'Failed to generate OTP' },

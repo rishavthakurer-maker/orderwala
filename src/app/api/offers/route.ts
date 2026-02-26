@@ -1,28 +1,30 @@
 import { NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 
 // GET /api/offers - Get active promo codes (public)
 export async function GET() {
   try {
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const now = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('promo_codes')
-      .select('id, code, description, discount_type, discount_value, min_order_amount, max_discount, valid_from, valid_until, usage_limit, used_count')
-      .eq('is_active', true)
-      .or(`valid_until.is.null,valid_until.gte.${now}`)
-      .or(`valid_from.is.null,valid_from.lte.${now}`)
-      .order('created_at', { ascending: false });
+    // Fetch all active promo codes, filter dates and usage in JS
+    const snap = await db.collection(Collections.PROMO_CODES)
+      .where('is_active', '==', true)
+      .orderBy('created_at', 'desc')
+      .get();
 
-    if (error) throw error;
+    const allPromos = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Record<string, unknown>[];
 
-    // Filter out fully used promos
-    const active = (data || []).filter(
-      (p: Record<string, unknown>) => !p.usage_limit || (p.used_count as number) < (p.usage_limit as number)
-    );
+    const active = allPromos.filter((p) => {
+      // Filter by date validity
+      if (p.valid_until && (p.valid_until as string) < now) return false;
+      if (p.valid_from && (p.valid_from as string) > now) return false;
+      // Filter out fully used promos
+      if (p.usage_limit && (p.used_count as number) >= (p.usage_limit as number)) return false;
+      return true;
+    });
 
-    const transformed = active.map((p: Record<string, unknown>) => ({
+    const transformed = active.map((p) => ({
       id: p.id,
       code: p.code,
       description: p.description,

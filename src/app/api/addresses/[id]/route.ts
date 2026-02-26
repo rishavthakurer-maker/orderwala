@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // PUT /api/addresses/[id] - Update address
@@ -14,17 +14,31 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const body = await request.json();
+    const now = new Date().toISOString();
 
-    if (body.isDefault) {
-      await supabase
-        .from('addresses')
-        .update({ is_default: false })
-        .eq('user_id', session.user.id);
+    // Verify ownership
+    const docRef = db.collection(Collections.ADDRESSES).doc(id);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists || docSnap.data()?.user_id !== session.user.id) {
+      return NextResponse.json({ success: false, error: 'Address not found' }, { status: 404 });
     }
 
-    const updateData: Record<string, unknown> = {};
+    if (body.isDefault) {
+      const existingSnap = await db.collection(Collections.ADDRESSES)
+        .where('user_id', '==', session.user.id)
+        .where('is_default', '==', true)
+        .get();
+
+      const batch = db.batch();
+      existingSnap.docs.forEach(doc => {
+        batch.update(doc.ref, { is_default: false, updated_at: now });
+      });
+      await batch.commit();
+    }
+
+    const updateData: Record<string, unknown> = { updated_at: now };
     if (body.type !== undefined) updateData.type = body.type;
     if (body.name !== undefined) updateData.name = body.name;
     if (body.phone !== undefined) updateData.phone = body.phone;
@@ -38,17 +52,10 @@ export async function PUT(
     if (body.latitude !== undefined) updateData.latitude = body.latitude;
     if (body.longitude !== undefined) updateData.longitude = body.longitude;
 
-    const { data: address, error } = await supabase
-      .from('addresses')
-      .update(updateData)
-      .eq('id', id)
-      .eq('user_id', session.user.id)
-      .select()
-      .single();
+    await docRef.update(updateData);
+    const updated = await docRef.get();
 
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, data: address });
+    return NextResponse.json({ success: true, data: { id: updated.id, ...updated.data() } });
   } catch (error) {
     console.error('Error updating address:', error);
     return NextResponse.json({ success: false, error: 'Failed to update address' }, { status: 500 });
@@ -67,14 +74,16 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
-    const { error } = await supabase
-      .from('addresses')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', session.user.id);
+    const db = getDb();
 
-    if (error) throw error;
+    // Verify ownership
+    const docRef = db.collection(Collections.ADDRESSES).doc(id);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists || docSnap.data()?.user_id !== session.user.id) {
+      return NextResponse.json({ success: false, error: 'Address not found' }, { status: 404 });
+    }
+
+    await docRef.delete();
 
     return NextResponse.json({ success: true });
   } catch (error) {

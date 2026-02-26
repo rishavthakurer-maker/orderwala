@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -28,21 +28,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    // Get counts
-    const [productsResult, categoriesResult, ordersResult] = await Promise.all([
-      supabase.from('products').select('id', { count: 'exact', head: true }),
-      supabase.from('categories').select('id', { count: 'exact', head: true }),
-      supabase.from('orders').select('id, total_amount', { count: 'exact' }),
+    // Get counts and order data
+    const [productsCount, categoriesCount, ordersSnapshot] = await Promise.all([
+      db.collection(Collections.PRODUCTS).count().get(),
+      db.collection(Collections.CATEGORIES).count().get(),
+      db.collection(Collections.ORDERS).select('total_amount').get(),
     ]);
 
-    const totalProducts = productsResult.count || 0;
-    const totalCategories = categoriesResult.count || 0;
-    const totalOrders = ordersResult.count || 0;
+    const totalProducts = productsCount.data().count;
+    const totalCategories = categoriesCount.data().count;
+    const totalOrders = ordersSnapshot.size;
     
     // Calculate total revenue
-    const totalRevenue = ordersResult.data?.reduce((sum: number, order: { total_amount?: number }) => sum + (order.total_amount || 0), 0) || 0;
+    const totalRevenue = ordersSnapshot.docs.reduce(
+      (sum: number, doc) => sum + (parseFloat(doc.data().total_amount) || 0),
+      0
+    );
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const { id } = await params;
     const body = await request.json();
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     const updateData: Record<string, unknown> = {};
     if (body.store_name !== undefined) updateData.store_name = body.store_name;
@@ -45,14 +45,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.delivery_fee !== undefined) updateData.delivery_fee = body.delivery_fee;
     updateData.updated_at = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('vendors')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    const vendorRef = db.collection(Collections.VENDORS).doc(id);
+    await vendorRef.update(updateData);
 
-    if (error) throw error;
+    const updatedSnap = await vendorRef.get();
+    const data = { id: updatedSnap.id, ...updatedSnap.data() };
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
@@ -69,14 +66,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { error } = await supabase
-      .from('vendors')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    // Soft delete: set is_active to false
+    await db.collection(Collections.VENDORS).doc(id).update({
+      is_active: false,
+      updated_at: new Date().toISOString(),
+    });
 
     return NextResponse.json({ success: true, message: 'Vendor deleted' });
   } catch (error) {

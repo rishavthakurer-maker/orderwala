@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // GET /api/seller/orders - Get seller's orders
@@ -10,40 +10,51 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single();
+    const vendorSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
 
-    if (!vendor) {
+    if (vendorSnap.empty) {
       return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
     }
+
+    const vendor = { id: vendorSnap.docs[0].id };
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || '';
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    let query = supabase
-      .from('orders')
-      .select('*, customer:users!orders_customer_id_fkey(id, name, email, phone)')
-      .eq('vendor_id', vendor.id)
-      .order('created_at', { ascending: false })
-      .limit(limit);
+    let query: FirebaseFirestore.Query = db.collection(Collections.ORDERS)
+      .where('vendor_id', '==', vendor.id)
+      .orderBy('created_at', 'desc');
 
     if (status && status !== 'all') {
-      query = query.eq('status', status);
+      query = query.where('status', '==', status);
     }
 
-    const { data: orders, error } = await query;
-    if (error) throw error;
+    query = query.limit(limit);
 
-    const transformed = (orders || []).map((o: Record<string, unknown>) => ({
+    const ordersSnap = await query.get();
+    const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Record<string, unknown>[];
+
+    // Fetch customer info for each order
+    const customerIds = [...new Set(orders.map(o => String(o.customer_id)).filter(Boolean))];
+    const customerMap: Record<string, Record<string, unknown>> = {};
+    for (const custId of customerIds) {
+      const custDoc = await db.collection(Collections.USERS).doc(custId).get();
+      if (custDoc.exists) {
+        const data = custDoc.data() as Record<string, unknown>;
+        customerMap[custId] = { id: custId, name: data.name, email: data.email, phone: data.phone };
+      }
+    }
+
+    const transformed = orders.map((o) => ({
       id: o.id,
       orderId: o.order_number || o.id,
-      customer: o.customer,
+      customer: customerMap[String(o.customer_id)] || null,
       items: o.items,
       subtotal: o.subtotal,
       deliveryCharge: o.delivery_charge,

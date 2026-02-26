@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // PUT /api/seller/orders/[id] - Update order status
@@ -11,27 +11,27 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single();
+    const vendorSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
 
-    if (!vendor) {
+    if (vendorSnap.empty) {
       return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
     }
 
-    // Verify order belongs to this vendor
-    const { data: order } = await supabase
-      .from('orders')
-      .select('id, status, status_history')
-      .eq('id', id)
-      .eq('vendor_id', vendor.id)
-      .single();
+    const vendor = { id: vendorSnap.docs[0].id };
 
-    if (!order) {
+    // Verify order belongs to this vendor
+    const orderDoc = await db.collection(Collections.ORDERS).doc(id).get();
+    if (!orderDoc.exists) {
+      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+    }
+
+    const order = { id: orderDoc.id, ...orderDoc.data() } as Record<string, unknown>;
+    if (order.vendor_id !== vendor.id) {
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
 
@@ -47,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       on_the_way: ['delivered'],
     };
 
-    const allowed = validTransitions[order.status] || [];
+    const allowed = validTransitions[order.status as string] || [];
     if (!allowed.includes(status)) {
       return NextResponse.json({
         success: false,
@@ -55,25 +55,23 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }, { status: 400 });
     }
 
-    const statusHistory = Array.isArray(order.status_history) ? order.status_history : [];
+    const statusHistory = Array.isArray(order.status_history) ? [...order.status_history] : [];
     statusHistory.push({
       status,
       timestamp: new Date().toISOString(),
       by: session.user.name || 'Vendor',
     });
 
-    const { data: updated, error } = await supabase
-      .from('orders')
-      .update({
-        status,
-        status_history: statusHistory,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .select()
-      .single();
+    const updateData = {
+      status,
+      status_history: statusHistory,
+      updated_at: new Date().toISOString(),
+    };
 
-    if (error) throw error;
+    await db.collection(Collections.ORDERS).doc(id).update(updateData);
+
+    const updatedDoc = await db.collection(Collections.ORDERS).doc(id).get();
+    const updated = { id: updatedDoc.id, ...updatedDoc.data() };
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
@@ -91,30 +89,40 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single();
+    const vendorSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
 
-    if (!vendor) {
+    if (vendorSnap.empty) {
       return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
     }
 
-    const { data: order, error } = await supabase
-      .from('orders')
-      .select('*, customer:users!orders_customer_id_fkey(id, name, email, phone)')
-      .eq('id', id)
-      .eq('vendor_id', vendor.id)
-      .single();
+    const vendor = { id: vendorSnap.docs[0].id };
 
-    if (error || !order) {
+    const orderDoc = await db.collection(Collections.ORDERS).doc(id).get();
+    if (!orderDoc.exists) {
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: order });
+    const order = { id: orderDoc.id, ...orderDoc.data() } as Record<string, unknown>;
+    if (order.vendor_id !== vendor.id) {
+      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+    }
+
+    // Fetch customer info
+    let customer = null;
+    if (order.customer_id) {
+      const custDoc = await db.collection(Collections.USERS).doc(String(order.customer_id)).get();
+      if (custDoc.exists) {
+        const data = custDoc.data() as Record<string, unknown>;
+        customer = { id: custDoc.id, name: data.name, email: data.email, phone: data.phone };
+      }
+    }
+
+    return NextResponse.json({ success: true, data: { ...order, customer } });
   } catch (error) {
     console.error('Error fetching order:', error);
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });

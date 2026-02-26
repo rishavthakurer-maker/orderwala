@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, docsToArray } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -26,25 +26,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search') || '';
+    const search = (searchParams.get('search') || '').toLowerCase();
 
-    let query = supabase
-      .from('users')
-      .select('id, name, email, phone, role, is_active, is_verified, wallet_balance, created_at')
-      .eq('role', 'customer')
-      .order('created_at', { ascending: false });
+    const snapshot = await db
+      .collection(Collections.USERS)
+      .where('role', '==', 'customer')
+      .orderBy('created_at', 'desc')
+      .get();
+
+    let customers = docsToArray<Record<string, unknown>>(snapshot).map(doc => ({
+      id: doc.id,
+      name: doc.name,
+      email: doc.email,
+      phone: doc.phone,
+      role: doc.role,
+      is_active: doc.is_active,
+      is_verified: doc.is_verified,
+      wallet_balance: doc.wallet_balance,
+      created_at: doc.created_at,
+    }));
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+      customers = customers.filter(c =>
+        (c.name && String(c.name).toLowerCase().includes(search)) ||
+        (c.email && String(c.email).toLowerCase().includes(search)) ||
+        (c.phone && String(c.phone).toLowerCase().includes(search))
+      );
     }
 
-    const { data: customers, error } = await query;
-
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, data: customers || [] });
+    return NextResponse.json({ success: true, data: customers });
   } catch (error) {
     console.error('Error fetching customers:', error);
     return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });

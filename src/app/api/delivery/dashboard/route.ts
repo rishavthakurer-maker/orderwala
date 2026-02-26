@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 export async function GET() {
@@ -9,99 +9,99 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const userId = session.user.id;
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - 7);
 
+    // Fetch all orders for this delivery partner
+    const myOrdersSnap = await db.collection(Collections.ORDERS)
+      .where('delivery_partner_id', '==', userId)
+      .get();
+
+    const myOrders = myOrdersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Record<string, unknown>[];
+
     // Today's deliveries
-    const { data: todayOrders } = await supabase
-      .from('orders')
-      .select('id, delivery_earnings, delivery_rating')
-      .eq('delivery_partner_id', userId)
-      .eq('status', 'delivered')
-      .gte('delivered_at', todayStart.toISOString());
+    const todayOrders = myOrders.filter(o =>
+      o.status === 'delivered' && (o.delivered_at as string) >= todayStart.toISOString()
+    );
+    const todayDeliveries = todayOrders.length;
+    const todayEarnings = todayOrders.reduce((sum, o) => sum + ((o.delivery_earnings as number) || 0), 0);
 
-    const todayDeliveries = todayOrders?.length || 0;
-    const todayEarnings = todayOrders?.reduce((sum: number, o: Record<string, number>) => sum + (o.delivery_earnings || 0), 0) || 0;
-
-    // Active orders (assigned but not delivered)
-    const { data: activeOrders } = await supabase
-      .from('orders')
-      .select('id')
-      .eq('delivery_partner_id', userId)
-      .not('status', 'in', '("delivered","cancelled")');
+    // Active orders (assigned but not delivered/cancelled)
+    const activeOrdersList = myOrders.filter(o =>
+      o.status !== 'delivered' && o.status !== 'cancelled'
+    );
 
     // Average rating from delivery_rating
-    const { data: ratedOrders } = await supabase
-      .from('orders')
-      .select('delivery_rating')
-      .eq('delivery_partner_id', userId)
-      .not('delivery_rating', 'is', null);
-
-    const avgRating = ratedOrders && ratedOrders.length > 0
-      ? (ratedOrders.reduce((sum: number, o: Record<string, number>) => sum + (o.delivery_rating || 0), 0) / ratedOrders.length).toFixed(1)
+    const ratedOrders = myOrders.filter(o => o.delivery_rating != null);
+    const avgRating = ratedOrders.length > 0
+      ? (ratedOrders.reduce((sum, o) => sum + ((o.delivery_rating as number) || 0), 0) / ratedOrders.length).toFixed(1)
       : '0.0';
 
     // Week stats
-    const { data: weekOrders } = await supabase
-      .from('orders')
-      .select('id, delivery_earnings, delivered_at')
-      .eq('delivery_partner_id', userId)
-      .eq('status', 'delivered')
-      .gte('delivered_at', weekStart.toISOString());
-
-    const weekDeliveries = weekOrders?.length || 0;
-    const weekEarnings = weekOrders?.reduce((sum: number, o: Record<string, number>) => sum + (o.delivery_earnings || 0), 0) || 0;
+    const weekOrders = myOrders.filter(o =>
+      o.status === 'delivered' && (o.delivered_at as string) >= weekStart.toISOString()
+    );
+    const weekDeliveries = weekOrders.length;
+    const weekEarnings = weekOrders.reduce((sum, o) => sum + ((o.delivery_earnings as number) || 0), 0);
 
     // Available orders (status = 'ready' and no delivery partner assigned)
-    const { data: availableOrders } = await supabase
-      .from('orders')
-      .select(`
-        id, order_number, items, total, delivery_fee, delivery_address, created_at,
-        vendor:vendors(id, store_name, phone, address)
-      `)
-      .is('delivery_partner_id', null)
-      .eq('status', 'ready')
-      .order('created_at', { ascending: false })
-      .limit(10);
+    const availableSnap = await db.collection(Collections.ORDERS)
+      .where('status', '==', 'ready')
+      .where('delivery_partner_id', '==', null)
+      .orderBy('created_at', 'desc')
+      .limit(10)
+      .get();
 
-    // My active orders
-    const { data: myActiveOrders } = await supabase
-      .from('orders')
-      .select(`
-        id, order_number, items, total, delivery_fee, delivery_address, delivery_earnings, status, created_at,
-        vendor:vendors(id, store_name, phone, address),
-        customer:users!orders_customer_id_fkey(id, name, phone)
-      `)
-      .eq('delivery_partner_id', userId)
-      .not('status', 'in', '("delivered","cancelled")')
-      .order('created_at', { ascending: false });
+    const availableOrdersRaw = availableSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Record<string, unknown>[];
 
-    const transformOrder = (o: Record<string, unknown>) => ({
-      _id: o.id,
-      orderId: o.order_number,
-      items: Array.isArray(o.items) ? o.items : [],
-      total: o.total,
-      deliveryFee: o.delivery_fee,
-      deliveryAddress: o.delivery_address,
-      deliveryEarnings: o.delivery_earnings || o.delivery_fee || 0,
-      status: o.status,
-      createdAt: o.created_at,
-      vendor: o.vendor ? {
-        _id: (o.vendor as Record<string, unknown>).id,
-        storeName: (o.vendor as Record<string, unknown>).store_name,
-        phone: (o.vendor as Record<string, unknown>).phone,
-        address: (o.vendor as Record<string, unknown>).address,
-      } : null,
-      customer: o.customer ? {
-        _id: (o.customer as Record<string, unknown>).id,
-        name: (o.customer as Record<string, unknown>).name,
-        phone: (o.customer as Record<string, unknown>).phone,
-      } : null,
-    });
+    const transformOrder = async (o: Record<string, unknown>) => {
+      let vendor = null;
+      let customer = null;
+
+      if (o.vendor_id) {
+        const vendorSnap = await db.collection(Collections.VENDORS).doc(o.vendor_id as string).get();
+        if (vendorSnap.exists) {
+          const v = vendorSnap.data()!;
+          vendor = { _id: vendorSnap.id, storeName: v.store_name, phone: v.phone, address: v.address };
+        }
+      }
+
+      if (o.customer_id) {
+        const customerSnap = await db.collection(Collections.USERS).doc(o.customer_id as string).get();
+        if (customerSnap.exists) {
+          const c = customerSnap.data()!;
+          customer = { _id: customerSnap.id, name: c.name, phone: c.phone };
+        }
+      }
+
+      return {
+        _id: o.id,
+        orderId: o.order_number,
+        items: Array.isArray(o.items) ? o.items : [],
+        total: o.total,
+        deliveryFee: o.delivery_fee,
+        deliveryAddress: o.delivery_address,
+        deliveryEarnings: o.delivery_earnings || o.delivery_fee || 0,
+        status: o.status,
+        createdAt: o.created_at,
+        vendor,
+        customer,
+      };
+    };
+
+    // My active orders with vendor/customer data
+    const myActiveOrdersRaw = activeOrdersList.sort((a, b) =>
+      ((b.created_at as string) || '').localeCompare((a.created_at as string) || '')
+    );
+
+    const [transformedActive, transformedAvailable] = await Promise.all([
+      Promise.all(myActiveOrdersRaw.map(transformOrder)),
+      Promise.all(availableOrdersRaw.map(transformOrder)),
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -109,14 +109,14 @@ export async function GET() {
         stats: {
           todayDeliveries,
           todayEarnings,
-          activeOrders: activeOrders?.length || 0,
+          activeOrders: activeOrdersList.length,
           rating: parseFloat(avgRating as string),
           weekDeliveries,
           weekEarnings,
-          totalRatings: ratedOrders?.length || 0,
+          totalRatings: ratedOrders.length,
         },
-        activeOrders: (myActiveOrders || []).map(transformOrder),
-        availableOrders: (availableOrders || []).map(transformOrder),
+        activeOrders: transformedActive,
+        availableOrders: transformedAvailable,
       },
     });
   } catch (error) {

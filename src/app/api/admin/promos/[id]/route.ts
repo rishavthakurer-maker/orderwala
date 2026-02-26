@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const { id } = await params;
     const body = await request.json();
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     const updateData: Record<string, unknown> = {};
     if (body.code !== undefined) updateData.code = body.code.toUpperCase();
@@ -41,14 +41,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.is_active !== undefined) updateData.is_active = body.is_active;
     updateData.updated_at = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('promo_codes')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    const promoRef = db.collection(Collections.PROMO_CODES).doc(id);
+    await promoRef.update(updateData);
 
-    if (error) throw error;
+    const updatedSnap = await promoRef.get();
+    const data = { id: updatedSnap.id, ...updatedSnap.data() };
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
@@ -65,14 +62,9 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { error } = await supabase
-      .from('promo_codes')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    await db.collection(Collections.PROMO_CODES).doc(id).delete();
 
     return NextResponse.json({ success: true, message: 'Promo code deleted' });
   } catch (error) {

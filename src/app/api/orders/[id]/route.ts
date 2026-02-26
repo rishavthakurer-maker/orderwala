@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, generateId } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type OrderRecord = Record<string, any>;
+
+// Helper to find an order by UUID or order_number
+async function findOrder(db: FirebaseFirestore.Firestore, id: string): Promise<OrderRecord | null> {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(id)) {
+    const doc = await db.collection(Collections.ORDERS).doc(id).get();
+    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+  } else {
+    const snap = await db.collection(Collections.ORDERS)
+      .where('order_number', '==', id)
+      .limit(1)
+      .get();
+    if (snap.empty) return null;
+    const doc = snap.docs[0];
+    return { id: doc.id, ...doc.data() };
+  }
+}
 
 // GET /api/orders/[id] - Get a single order
 export async function GET(
@@ -18,55 +38,47 @@ export async function GET(
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const order = await findOrder(db, id);
 
-    // Try to find by UUID id or order_id string
-    let query = supabase
-      .from('orders')
-      .select(`
-        *,
-        customer:users!orders_customer_id_fkey(id, name, phone, email),
-        vendor:vendors(id, store_name, phone, address),
-        delivery_partner:users!orders_delivery_partner_id_fkey(id, name, phone)
-      `);
-
-    // Check if id is a UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (uuidRegex.test(id)) {
-      query = query.eq('id', id);
-    } else {
-      query = query.eq('order_number', id);
-    }
-
-    const { data: order, error } = await query.single();
-
-    if (error || !order) {
+    if (!order) {
       return NextResponse.json(
         { success: false, error: 'Order not found' },
         { status: 404 }
       );
     }
 
+    // Fetch related docs in parallel
+    const [customerDoc, vendorDoc, deliveryDoc] = await Promise.all([
+      order.customer_id ? db.collection(Collections.USERS).doc(order.customer_id).get() : null,
+      order.vendor_id ? db.collection(Collections.VENDORS).doc(order.vendor_id).get() : null,
+      order.delivery_partner_id ? db.collection(Collections.USERS).doc(order.delivery_partner_id).get() : null,
+    ]);
+
+    const customer = customerDoc?.exists ? { id: customerDoc.id, ...customerDoc.data() } as OrderRecord : null;
+    const vendor = vendorDoc?.exists ? { id: vendorDoc.id, ...vendorDoc.data() } as OrderRecord : null;
+    const delivery_partner = deliveryDoc?.exists ? { id: deliveryDoc.id, ...deliveryDoc.data() } as OrderRecord : null;
+
     // Transform response
     const response = {
       _id: order.id,
       orderId: order.order_number,
-      customer: order.customer ? {
-        _id: order.customer.id,
-        name: order.customer.name,
-        phone: order.customer.phone,
-        email: order.customer.email,
+      customer: customer ? {
+        _id: customer.id,
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email,
       } : null,
-      vendor: order.vendor ? {
-        _id: order.vendor.id,
-        storeName: order.vendor.store_name,
-        phone: order.vendor.phone,
-        address: order.vendor.address,
+      vendor: vendor ? {
+        _id: vendor.id,
+        storeName: vendor.store_name,
+        phone: vendor.phone,
+        address: vendor.address,
       } : null,
-      deliveryPartner: order.delivery_partner ? {
-        _id: order.delivery_partner.id,
-        name: order.delivery_partner.name,
-        phone: order.delivery_partner.phone,
+      deliveryPartner: delivery_partner ? {
+        _id: delivery_partner.id,
+        name: delivery_partner.name,
+        phone: delivery_partner.phone,
       } : null,
       items: order.items,
       subtotal: order.subtotal,
@@ -121,23 +133,14 @@ export async function PUT(
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const body = await request.json();
     const { status, deliveryPartner, cancellationReason, note } = body;
 
     // Find the order
-    let findQuery = supabase.from('orders').select('*');
-    
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (uuidRegex.test(id)) {
-      findQuery = findQuery.eq('id', id);
-    } else {
-      findQuery = findQuery.eq('order_number', id);
-    }
+    const order = await findOrder(db, id);
 
-    const { data: order, error: findError } = await findQuery.single();
-
-    if (findError || !order) {
+    if (!order) {
       return NextResponse.json(
         { success: false, error: 'Order not found' },
         { status: 404 }
@@ -164,7 +167,8 @@ export async function PUT(
     }
 
     // Build update data
-    const updateData: Record<string, unknown> = {};
+    const now = new Date().toISOString();
+    const updateData: Record<string, unknown> = { updated_at: now };
 
     if (status) {
       updateData.status = status;
@@ -175,51 +179,33 @@ export async function PUT(
         ...currentHistory,
         {
           status,
-          timestamp: new Date().toISOString(),
+          timestamp: now,
           note: note || '',
         },
       ];
 
       // Set timestamps based on status
-      if (status === 'confirmed') updateData.confirmed_at = new Date().toISOString();
-      if (status === 'preparing') updateData.preparing_at = new Date().toISOString();
-      if (status === 'ready') updateData.ready_at = new Date().toISOString();
-      if (status === 'picked_up') updateData.picked_up_at = new Date().toISOString();
+      if (status === 'confirmed') updateData.confirmed_at = now;
+      if (status === 'preparing') updateData.preparing_at = now;
+      if (status === 'ready') updateData.ready_at = now;
+      if (status === 'picked_up') updateData.picked_up_at = now;
       if (status === 'delivered') {
-        updateData.delivered_at = new Date().toISOString();
+        updateData.delivered_at = now;
         updateData.payment_status = 'completed';
       }
       if (status === 'cancelled') {
-        updateData.cancelled_at = new Date().toISOString();
+        updateData.cancelled_at = now;
         updateData.cancel_reason = cancellationReason;
       }
     }
 
     if (deliveryPartner) {
       updateData.delivery_partner_id = deliveryPartner;
-      updateData.assigned_at = new Date().toISOString();
+      updateData.assigned_at = now;
     }
 
-    // Update order
-    const { data: updatedOrder, error: updateError } = await supabase
-      .from('orders')
-      .update(updateData)
-      .eq('id', order.id)
-      .select(`
-        *,
-        customer:users!orders_customer_id_fkey(id, name, phone),
-        vendor:vendors(id, store_name, phone),
-        delivery_partner:users!orders_delivery_partner_id_fkey(id, name, phone)
-      `)
-      .single();
-
-    if (updateError) {
-      console.error('Error updating order:', updateError);
-      return NextResponse.json(
-        { success: false, error: 'Failed to update order' },
-        { status: 500 }
-      );
-    }
+    // Update order in Firestore
+    await db.collection(Collections.ORDERS).doc(order.id).update(updateData);
 
     // Create notification
     if (status) {
@@ -233,33 +219,50 @@ export async function PUT(
         cancelled: 'Your order has been cancelled',
       };
 
-      await supabase.from('notifications').insert({
+      const notifId = generateId();
+      await db.collection(Collections.NOTIFICATIONS).doc(notifId).set({
         user_id: order.customer_id,
         type: 'order',
         title: `Order ${status.replace('_', ' ').toUpperCase()}`,
         message: statusMessages[status],
         data: { orderId: order.order_number },
+        created_at: now,
+        updated_at: now,
       });
     }
+
+    // Merge updated fields with existing order for response
+    const updatedOrder = { ...order, ...updateData };
+
+    // Fetch related docs in parallel
+    const [customerDoc, vendorDoc, deliveryDoc] = await Promise.all([
+      updatedOrder.customer_id ? db.collection(Collections.USERS).doc(updatedOrder.customer_id).get() : null,
+      updatedOrder.vendor_id ? db.collection(Collections.VENDORS).doc(updatedOrder.vendor_id).get() : null,
+      updatedOrder.delivery_partner_id ? db.collection(Collections.USERS).doc(updatedOrder.delivery_partner_id as string).get() : null,
+    ]);
+
+    const customer = customerDoc?.exists ? { id: customerDoc.id, ...customerDoc.data() } as OrderRecord : null;
+    const vendor = vendorDoc?.exists ? { id: vendorDoc.id, ...vendorDoc.data() } as OrderRecord : null;
+    const delivery_partner = deliveryDoc?.exists ? { id: deliveryDoc.id, ...deliveryDoc.data() } as OrderRecord : null;
 
     // Transform response
     const response = {
       _id: updatedOrder.id,
       orderId: updatedOrder.order_number,
-      customer: updatedOrder.customer ? {
-        _id: updatedOrder.customer.id,
-        name: updatedOrder.customer.name,
-        phone: updatedOrder.customer.phone,
+      customer: customer ? {
+        _id: customer.id,
+        name: customer.name,
+        phone: customer.phone,
       } : null,
-      vendor: updatedOrder.vendor ? {
-        _id: updatedOrder.vendor.id,
-        storeName: updatedOrder.vendor.store_name,
-        phone: updatedOrder.vendor.phone,
+      vendor: vendor ? {
+        _id: vendor.id,
+        storeName: vendor.store_name,
+        phone: vendor.phone,
       } : null,
-      deliveryPartner: updatedOrder.delivery_partner ? {
-        _id: updatedOrder.delivery_partner.id,
-        name: updatedOrder.delivery_partner.name,
-        phone: updatedOrder.delivery_partner.phone,
+      deliveryPartner: delivery_partner ? {
+        _id: delivery_partner.id,
+        name: delivery_partner.name,
+        phone: delivery_partner.phone,
       } : null,
       status: updatedOrder.status,
       timeline: updatedOrder.status_history,

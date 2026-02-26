@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, generateId } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -26,79 +26,99 @@ export async function GET(request: NextRequest) {
     const userRole = session.user.role;
     const userId = session.user.id;
 
-    // Build query
-    let query = supabase
-      .from('orders')
-      .select(`
-        *,
-        customer:users!orders_customer_id_fkey(id, name, phone),
-        vendor:vendors(id, store_name, phone),
-        delivery_partner:users!orders_delivery_partner_id_fkey(id, name, phone)
-      `, { count: 'exact' });
+    // Build Firestore query
+    let query: FirebaseFirestore.Query = db.collection(Collections.ORDERS);
 
     // Filter based on user role
     if (userRole === 'customer') {
-      query = query.eq('customer_id', userId);
+      query = query.where('customer_id', '==', userId);
     } else if (userRole === 'vendor') {
-      query = query.eq('vendor_id', vendorId || userId);
+      query = query.where('vendor_id', '==', vendorId || userId);
     } else if (userRole === 'delivery') {
-      query = query.eq('delivery_partner_id', userId);
+      query = query.where('delivery_partner_id', '==', userId);
     }
     // Admin can see all orders
 
     if (status) {
-      query = query.eq('status', status);
+      query = query.where('status', '==', status);
     }
 
+    query = query.orderBy('created_at', 'desc');
+
+    // Get total count for pagination
+    const countSnap = await query.count().get();
+    const total = countSnap.data().count;
+
+    // Paginate
     const offset = (page - 1) * limit;
-    query = query
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const ordersSnap = await query.offset(offset).limit(limit).get();
 
-    const { data: orders, count, error } = await query;
+    const orders: OrderRecord[] = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    if (error) {
-      console.error('Error fetching orders:', error);
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch orders' },
-        { status: 500 }
-      );
+    // Fetch related docs (customer, vendor, delivery_partner) in parallel
+    const customerIds = [...new Set(orders.map(o => o.customer_id).filter(Boolean))];
+    const vendorIds = [...new Set(orders.map(o => o.vendor_id).filter(Boolean))];
+    const deliveryPartnerIds = [...new Set(orders.map(o => o.delivery_partner_id).filter(Boolean))];
+
+    const [customerDocs, vendorDocs, deliveryDocs] = await Promise.all([
+      Promise.all(customerIds.map(cid => db.collection(Collections.USERS).doc(cid).get())),
+      Promise.all(vendorIds.map(vid => db.collection(Collections.VENDORS).doc(vid).get())),
+      Promise.all(deliveryPartnerIds.map(did => db.collection(Collections.USERS).doc(did).get())),
+    ]);
+
+    const customersMap: Record<string, OrderRecord> = {};
+    for (const doc of customerDocs) {
+      if (doc.exists) customersMap[doc.id] = { id: doc.id, ...doc.data() };
+    }
+    const vendorsMap: Record<string, OrderRecord> = {};
+    for (const doc of vendorDocs) {
+      if (doc.exists) vendorsMap[doc.id] = { id: doc.id, ...doc.data() };
+    }
+    const deliveryMap: Record<string, OrderRecord> = {};
+    for (const doc of deliveryDocs) {
+      if (doc.exists) deliveryMap[doc.id] = { id: doc.id, ...doc.data() };
     }
 
     // Transform to match frontend expectations
-    const transformedOrders = (orders || []).map((order: OrderRecord) => ({
-      _id: order.id,
-      orderId: order.order_number,
-      customer: order.customer ? {
-        _id: order.customer.id,
-        name: order.customer.name,
-        phone: order.customer.phone,
-      } : null,
-      vendor: order.vendor ? {
-        _id: order.vendor.id,
-        storeName: order.vendor.store_name,
-        phone: order.vendor.phone,
-      } : null,
-      deliveryPartner: order.delivery_partner ? {
-        _id: order.delivery_partner.id,
-        name: order.delivery_partner.name,
-        phone: order.delivery_partner.phone,
-      } : null,
-      items: order.items,
-      subtotal: order.subtotal,
-      deliveryCharge: order.delivery_fee,
-      discount: order.discount,
-      total: order.total,
-      deliveryAddress: order.delivery_address,
-      paymentMethod: order.payment_method,
-      paymentStatus: order.payment_status,
-      status: order.status,
-      instructions: order.delivery_instructions,
-      promoCode: order.promo_code,
-      timeline: order.status_history,
-      createdAt: order.created_at,
-      updatedAt: order.updated_at,
-    }));
+    const transformedOrders = orders.map((order: OrderRecord) => {
+      const customer = customersMap[order.customer_id] || null;
+      const vendor = vendorsMap[order.vendor_id] || null;
+      const delivery_partner = deliveryMap[order.delivery_partner_id] || null;
+
+      return {
+        _id: order.id,
+        orderId: order.order_number,
+        customer: customer ? {
+          _id: customer.id,
+          name: customer.name,
+          phone: customer.phone,
+        } : null,
+        vendor: vendor ? {
+          _id: vendor.id,
+          storeName: vendor.store_name,
+          phone: vendor.phone,
+        } : null,
+        deliveryPartner: delivery_partner ? {
+          _id: delivery_partner.id,
+          name: delivery_partner.name,
+          phone: delivery_partner.phone,
+        } : null,
+        items: order.items,
+        subtotal: order.subtotal,
+        deliveryCharge: order.delivery_fee,
+        discount: order.discount,
+        total: order.total,
+        deliveryAddress: order.delivery_address,
+        paymentMethod: order.payment_method,
+        paymentStatus: order.payment_status,
+        status: order.status,
+        instructions: order.delivery_instructions,
+        promoCode: order.promo_code,
+        timeline: order.status_history,
+        createdAt: order.created_at,
+        updatedAt: order.updated_at,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -107,8 +127,8 @@ export async function GET(request: NextRequest) {
         pagination: {
           page,
           limit,
-          total: count || 0,
-          pages: Math.ceil((count || 0) / limit),
+          total,
+          pages: Math.ceil(total / limit),
         },
       },
     });
@@ -132,7 +152,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const body = await request.json();
     const { items, vendorId, deliveryAddress, paymentMethod, instructions, promoCode } = body;
 
@@ -145,13 +165,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify vendor exists
-    const { data: vendor, error: vendorError } = await supabase
-      .from('vendors')
-      .select('*')
-      .eq('id', vendorId)
-      .single();
-
-    if (vendorError || !vendor) {
+    const vendorDoc = await db.collection(Collections.VENDORS).doc(vendorId).get();
+    if (!vendorDoc.exists) {
       return NextResponse.json(
         { success: false, error: 'Vendor not found' },
         { status: 404 }
@@ -163,18 +178,15 @@ export async function POST(request: NextRequest) {
     const orderItems = [];
 
     for (const item of items) {
-      const { data: product, error: productError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', item.productId)
-        .single();
-
-      if (productError || !product) {
+      const productDoc = await db.collection(Collections.PRODUCTS).doc(item.productId).get();
+      if (!productDoc.exists) {
         return NextResponse.json(
           { success: false, error: `Product ${item.productId} not found` },
           { status: 404 }
         );
       }
+
+      const product = { id: productDoc.id, ...productDoc.data() } as OrderRecord;
 
       if (product.stock < item.quantity) {
         return NextResponse.json(
@@ -195,10 +207,10 @@ export async function POST(request: NextRequest) {
       subtotal += product.price * item.quantity;
 
       // Update stock
-      await supabase
-        .from('products')
-        .update({ stock: product.stock - item.quantity })
-        .eq('id', product.id);
+      await db.collection(Collections.PRODUCTS).doc(product.id).update({
+        stock: product.stock - item.quantity,
+        updated_at: new Date().toISOString(),
+      });
     }
 
     // Calculate delivery charge
@@ -207,14 +219,14 @@ export async function POST(request: NextRequest) {
     // Apply promo code discount
     let discount = 0;
     if (promoCode) {
-      const { data: promo } = await supabase
-        .from('promo_codes')
-        .select('*')
-        .eq('code', promoCode.toUpperCase())
-        .eq('is_active', true)
-        .single();
+      const promoSnap = await db.collection(Collections.PROMO_CODES)
+        .where('code', '==', promoCode.toUpperCase())
+        .where('is_active', '==', true)
+        .limit(1)
+        .get();
 
-      if (promo) {
+      if (!promoSnap.empty) {
+        const promo = promoSnap.docs[0].data();
         if (promo.discount_type === 'percentage') {
           discount = Math.round(subtotal * (promo.discount_value / 100));
           if (promo.max_discount && discount > promo.max_discount) {
@@ -228,70 +240,69 @@ export async function POST(request: NextRequest) {
 
     const total = subtotal + deliveryCharge - discount;
 
-    // Generate order ID
-    const { count: orderCount } = await supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true });
+    // Generate order number
+    const countSnap = await db.collection(Collections.ORDERS).count().get();
+    const orderCount = countSnap.data().count;
 
-    const orderNumber = `OW${new Date().getDate().toString().padStart(2, '0')}${(new Date().getMonth() + 1).toString().padStart(2, '0')}${((orderCount || 0) + 1).toString().padStart(6, '0')}`;
+    const orderNumber = `OW${new Date().getDate().toString().padStart(2, '0')}${(new Date().getMonth() + 1).toString().padStart(2, '0')}${(orderCount + 1).toString().padStart(6, '0')}`;
+
+    const now = new Date().toISOString();
+    const orderId = generateId();
+
+    const orderData = {
+      order_number: orderNumber,
+      customer_id: session.user.id,
+      vendor_id: vendorId,
+      items: orderItems,
+      subtotal,
+      delivery_fee: deliveryCharge,
+      discount,
+      total,
+      delivery_address: deliveryAddress,
+      payment_method: paymentMethod,
+      payment_status: 'pending',
+      delivery_instructions: instructions,
+      promo_code: promoCode,
+      status: 'pending',
+      status_history: [{
+        status: 'pending',
+        timestamp: now,
+        note: 'Order placed',
+      }],
+      created_at: now,
+      updated_at: now,
+    };
 
     // Create order
-    const { data: order, error: createError } = await supabase
-      .from('orders')
-      .insert({
-        order_number: orderNumber,
-        customer_id: session.user.id,
-        vendor_id: vendorId,
-        items: orderItems,
-        subtotal,
-        delivery_fee: deliveryCharge,
-        discount,
-        total,
-        delivery_address: deliveryAddress,
-        payment_method: paymentMethod,
-        payment_status: 'pending',
-        delivery_instructions: instructions,
-        promo_code: promoCode,
-        status: 'pending',
-        status_history: [{
-          status: 'pending',
-          timestamp: new Date().toISOString(),
-          note: 'Order placed',
-        }],
-      })
-      .select(`
-        *,
-        customer:users!orders_customer_id_fkey(id, name, phone),
-        vendor:vendors(id, store_name, phone)
-      `)
-      .single();
+    await db.collection(Collections.ORDERS).doc(orderId).set(orderData);
 
-    if (createError) {
-      console.error('Error creating order:', createError);
-      return NextResponse.json(
-        { success: false, error: 'Failed to create order' },
-        { status: 500 }
-      );
-    }
+    // Fetch customer & vendor for response
+    const [customerDoc, vendorDataDoc] = await Promise.all([
+      db.collection(Collections.USERS).doc(session.user.id).get(),
+      db.collection(Collections.VENDORS).doc(vendorId).get(),
+    ]);
+
+    const customer = customerDoc.exists ? { id: customerDoc.id, ...customerDoc.data() } as OrderRecord : null;
+    const vendor = vendorDataDoc.exists ? { id: vendorDataDoc.id, ...vendorDataDoc.data() } as OrderRecord : null;
 
     // Transform response
     const response = {
-      _id: order.id,
-      orderId: order.order_number,
-      customer: order.customer,
-      vendor: order.vendor,
-      items: order.items,
-      subtotal: order.subtotal,
-      deliveryCharge: order.delivery_fee,
-      discount: order.discount,
-      total: order.total,
-      deliveryAddress: order.delivery_address,
-      paymentMethod: order.payment_method,
-      paymentStatus: order.payment_status,
-      status: order.status,
-      instructions: order.delivery_instructions,
-      promoCode: order.promo_code,
-      createdAt: order.created_at,
+      _id: orderId,
+      orderId: orderNumber,
+      customer: customer ? { _id: customer.id, name: customer.name, phone: customer.phone } : null,
+      vendor: vendor ? { _id: vendor.id, store_name: vendor.store_name, phone: vendor.phone } : null,
+      items: orderItems,
+      subtotal,
+      deliveryCharge,
+      discount,
+      total,
+      deliveryAddress: deliveryAddress,
+      paymentMethod: paymentMethod,
+      paymentStatus: 'pending',
+      status: 'pending',
+      instructions: instructions,
+      promoCode: promoCode,
+      createdAt: now,
     };
 
     return NextResponse.json(

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, docToObj } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -17,6 +17,42 @@ function verifyAdminToken(request: NextRequest) {
     return decoded;
   } catch {
     return null;
+  }
+}
+
+// Get single category
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const decoded = verifyAdminToken(request);
+    if (!decoded) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await params;
+    const db = getDb();
+    const catDoc = await db.collection(Collections.CATEGORIES).doc(id).get();
+    const category = docToObj<Record<string, unknown>>(catDoc);
+
+    if (!category) {
+      return NextResponse.json(
+        { success: false, message: 'Category not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: category });
+  } catch (error) {
+    console.error('Error fetching category:', error);
+    return NextResponse.json(
+      { success: false, message: 'Server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -38,7 +74,7 @@ export async function PUT(
     const body = await request.json();
     const { name, description, image, icon, sortOrder, isActive } = body;
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     const updateData: Record<string, unknown> = {};
     if (name) {
@@ -52,14 +88,11 @@ export async function PUT(
     if (isActive !== undefined) updateData.is_active = isActive;
     updateData.updated_at = new Date().toISOString();
 
-    const { data: category, error } = await supabase
-      .from('categories')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    await db.collection(Collections.CATEGORIES).doc(id).update(updateData);
 
-    if (error) throw error;
+    // Re-read the updated document
+    const updatedDoc = await db.collection(Collections.CATEGORIES).doc(id).get();
+    const category = docToObj<Record<string, unknown>>(updatedDoc);
 
     return NextResponse.json({
       success: true,
@@ -90,27 +123,23 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     // Check if category has products
-    const { count } = await supabase
-      .from('products')
-      .select('id', { count: 'exact', head: true })
-      .eq('category_id', id);
+    const productsSnap = await db
+      .collection(Collections.PRODUCTS)
+      .where('category_id', '==', id)
+      .limit(1)
+      .get();
 
-    if (count && count > 0) {
+    if (!productsSnap.empty) {
       return NextResponse.json(
         { success: false, message: 'Cannot delete category with products' },
         { status: 400 }
       );
     }
 
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    await db.collection(Collections.CATEGORIES).doc(id).delete();
 
     return NextResponse.json({
       success: true,

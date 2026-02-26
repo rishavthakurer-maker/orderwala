@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -33,21 +33,22 @@ export async function PUT(
     const body = await request.json();
     const { status } = body;
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const orderRef = db.collection(Collections.ORDERS).doc(id);
+    const orderSnap = await orderRef.get();
 
+    if (!orderSnap.exists) {
+      return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
+    }
+
+    const existing = orderSnap.data()!;
     const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
     if (status) {
       updateData.status = status;
 
       // Update status history
-      const { data: existing } = await supabase
-        .from('orders')
-        .select('status_history')
-        .eq('id', id)
-        .single();
-
-      const history = (existing?.status_history as Array<Record<string, string>>) || [];
+      const history = (existing.status_history as Array<Record<string, string>>) || [];
       history.push({
         status,
         timestamp: new Date().toISOString(),
@@ -64,18 +65,39 @@ export async function PUT(
       }
     }
 
-    const { data: order, error } = await supabase
-      .from('orders')
-      .update(updateData)
-      .eq('id', id)
-      .select(`
-        *,
-        customer:users!orders_customer_id_fkey(id, name, phone, email),
-        vendor:vendors!orders_vendor_id_fkey(id, store_name)
-      `)
-      .single();
+    await orderRef.update(updateData);
 
-    if (error) throw error;
+    // Fetch updated order with joins
+    const updatedSnap = await orderRef.get();
+    const order: any = { id: updatedSnap.id, ...updatedSnap.data() };
+
+    const [customerSnap, vendorSnap] = await Promise.all([
+      order.customer_id ? db.collection(Collections.USERS).doc(order.customer_id).get() : null,
+      order.vendor_id ? db.collection(Collections.VENDORS).doc(order.vendor_id).get() : null,
+    ]);
+
+    if (customerSnap?.exists) {
+      const c = customerSnap.data()!;
+      order.customer = { id: customerSnap.id, name: c.name, phone: c.phone, email: c.email };
+    }
+    if (vendorSnap?.exists) {
+      const v = vendorSnap.data()!;
+      order.vendor = { id: vendorSnap.id, store_name: v.store_name };
+    }
+
+    // Create notification for status update
+    if (status && order.customer_id) {
+      const notifId = crypto.randomUUID();
+      await db.collection(Collections.NOTIFICATIONS).doc(notifId).set({
+        id: notifId,
+        user_id: order.customer_id,
+        title: 'Order Update',
+        message: `Your order #${order.order_number || id} status has been updated to ${status}`,
+        type: 'order_update',
+        is_read: false,
+        created_at: new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json({
       success: true,

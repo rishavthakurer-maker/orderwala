@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 
 // GET /api/vendors/[id] - Get a single vendor with products
 export async function GET(
@@ -8,33 +8,61 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     const { searchParams } = new URL(request.url);
     const includeProducts = searchParams.get('products') === 'true';
 
-    const { data: vendor, error } = await supabase
-      .from('vendors')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const vendorDoc = await db.collection(Collections.VENDORS).doc(id).get();
 
-    if (error || !vendor) {
+    if (!vendorDoc.exists) {
       return NextResponse.json(
         { success: false, error: 'Vendor not found' },
         { status: 404 }
       );
     }
 
+    const vendor = { id: vendorDoc.id, ...vendorDoc.data() };
+
     let products = null;
     if (includeProducts) {
-      const { data } = await supabase
-        .from('products')
-        .select('*, category:categories(id, name, slug)')
-        .eq('vendor_id', id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-      products = data;
+      const productsSnapshot = await db
+        .collection(Collections.PRODUCTS)
+        .where('vendor_id', '==', id)
+        .where('is_active', '==', true)
+        .orderBy('created_at', 'desc')
+        .get();
+
+      // Collect unique category IDs for separate reads
+      const categoryIds = new Set<string>();
+      productsSnapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (data.category_id) categoryIds.add(data.category_id);
+      });
+
+      // Fetch categories
+      const categoryMap: Record<string, { id: string; name: string; slug: string }> = {};
+      if (categoryIds.size > 0) {
+        const categoryPromises = Array.from(categoryIds).map((catId) =>
+          db.collection(Collections.CATEGORIES).doc(catId).get()
+        );
+        const categoryDocs = await Promise.all(categoryPromises);
+        categoryDocs.forEach((catDoc) => {
+          if (catDoc.exists) {
+            const catData = catDoc.data()!;
+            categoryMap[catDoc.id] = { id: catDoc.id, name: catData.name, slug: catData.slug };
+          }
+        });
+      }
+
+      products = productsSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          category: data.category_id ? categoryMap[data.category_id] || null : null,
+        };
+      });
     }
 
     return NextResponse.json({
@@ -61,21 +89,23 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { data: vendor, error } = await supabase
-      .from('vendors')
-      .update(body)
-      .eq('id', id)
-      .select('*')
-      .single();
+    const vendorRef = db.collection(Collections.VENDORS).doc(id);
+    const vendorDoc = await vendorRef.get();
 
-    if (error || !vendor) {
+    if (!vendorDoc.exists) {
       return NextResponse.json(
         { success: false, error: 'Vendor not found' },
         { status: 404 }
       );
     }
+
+    const updateData = { ...body, updated_at: new Date().toISOString() };
+    await vendorRef.update(updateData);
+
+    const updatedDoc = await vendorRef.get();
+    const vendor = { id: updatedDoc.id, ...updatedDoc.data() };
 
     return NextResponse.json({ success: true, data: vendor });
   } catch (error) {
@@ -94,25 +124,36 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { error } = await supabase
-      .from('vendors')
-      .update({ is_active: false })
-      .eq('id', id);
+    const vendorRef = db.collection(Collections.VENDORS).doc(id);
+    const vendorDoc = await vendorRef.get();
 
-    if (error) {
+    if (!vendorDoc.exists) {
       return NextResponse.json(
         { success: false, error: 'Vendor not found' },
         { status: 404 }
       );
     }
 
-    // Also deactivate all vendor products
-    await supabase
-      .from('products')
-      .update({ is_active: false })
-      .eq('vendor_id', id);
+    const now = new Date().toISOString();
+
+    // Soft delete vendor
+    await vendorRef.update({ is_active: false, updated_at: now });
+
+    // Also deactivate all vendor products using batch
+    const productsSnapshot = await db
+      .collection(Collections.PRODUCTS)
+      .where('vendor_id', '==', id)
+      .get();
+
+    if (!productsSnapshot.empty) {
+      const batch = db.batch();
+      productsSnapshot.docs.forEach((doc) => {
+        batch.update(doc.ref, { is_active: false, updated_at: now });
+      });
+      await batch.commit();
+    }
 
     return NextResponse.json({
       success: true,

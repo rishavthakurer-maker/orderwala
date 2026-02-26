@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase';
-import type { Database } from '@/lib/supabase/types';
-
-type Product = Database['public']['Tables']['products']['Row'];
+import { getDb, Collections, generateId } from '@/lib/firebase';
 
 // GET /api/products - Get all products with filters
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -22,30 +19,21 @@ export async function GET(request: NextRequest) {
     const inStock = searchParams.get('inStock');
     const featured = searchParams.get('featured');
 
-    // Build query
-    let query = supabase
-      .from('products')
-      .select(`
-        *,
-        category:categories(id, name, slug),
-        vendor:vendors(id, store_name, logo)
-      `, { count: 'exact' })
-      .eq('is_active', true);
+    // Build base Firestore query with equality filters only
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = db.collection(Collections.PRODUCTS).where('is_active', '==', true);
 
+    // Resolve category filter
+    let categoryId: string | null = null;
     if (category) {
-      // Support both UUID and slug
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(category)) {
-        query = query.eq('category_id', category);
+        categoryId = category;
       } else {
         // Look up category by slug
-        const { data: cat } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('slug', category)
-          .single();
-        if (cat) {
-          query = query.eq('category_id', cat.id);
+        const catSnap = await db.collection(Collections.CATEGORIES).where('slug', '==', category).limit(1).get();
+        if (!catSnap.empty) {
+          categoryId = catSnap.docs[0].id;
         } else {
           // No matching category, return empty
           return NextResponse.json({
@@ -54,83 +42,131 @@ export async function GET(request: NextRequest) {
           });
         }
       }
+      query = query.where('category_id', '==', categoryId);
     }
 
     if (vendor) {
-      query = query.eq('vendor_id', vendor);
-    }
-
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
-    }
-
-    if (minPrice) {
-      query = query.gte('price', parseFloat(minPrice));
-    }
-
-    if (maxPrice) {
-      query = query.lte('price', parseFloat(maxPrice));
-    }
-
-    if (inStock === 'true') {
-      query = query.gt('stock', 0);
+      query = query.where('vendor_id', '==', vendor);
     }
 
     if (featured === 'true') {
-      query = query.eq('is_featured', true);
+      query = query.where('is_featured', '==', true);
     }
 
-    // Pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+    // Fetch all matching docs (equality-filtered)
+    const snapshot = await query.get();
 
-    // Sort - map frontend field names to database column names
-    const sortColumn = sortBy === 'createdAt' ? 'created_at' : 
-                       sortBy === 'price' ? 'price' : 
-                       sortBy === 'name' ? 'name' : 'created_at';
-    
-    query = query
-      .order(sortColumn, { ascending: sortOrder === 'asc' })
-      .range(from, to);
-
-    const { data: products, error, count } = await query;
-
-    if (error) throw error;
-
-    // Transform to match frontend expectations
-    const transformedProducts = products?.map((product: Product & { vendor?: { id: string; store_name: string; logo?: string | null } | null; category?: { id: string; name: string; slug: string } | null }) => ({
-      _id: product.id,
-      name: product.name,
-      slug: product.slug,
-      description: product.description,
-      images: product.images,
-      price: product.price,
-      discountPrice: product.discount_price,
-      unit: product.unit,
-      stock: product.stock,
-      minOrderQty: product.min_order_qty,
-      maxOrderQty: product.max_order_qty,
-      isVeg: product.is_veg,
-      isFeatured: product.is_featured,
-      isAvailable: product.is_available,
-      averageRating: product.average_rating,
-      totalRatings: product.total_ratings,
-      totalSold: product.total_sold,
-      category: product.category ? {
-        _id: product.category.id,
-        name: product.category.name,
-        slug: product.category.slug,
-      } : null,
-      vendor: product.vendor ? {
-        _id: product.vendor.id,
-        storeName: product.vendor.store_name,
-        logo: product.vendor.logo,
-      } : null,
-      createdAt: product.created_at,
-      updatedAt: product.updated_at,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let products: any[] = snapshot.docs.map((doc: any) => ({
+      id: doc.id,
+      ...doc.data(),
     }));
 
-    const total = count || 0;
+    // Apply remaining filters in JS (range, text search, stock)
+    if (search) {
+      const searchLower = search.toLowerCase();
+      products = products.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (p: any) =>
+          (p.name && p.name.toLowerCase().includes(searchLower)) ||
+          (p.description && p.description.toLowerCase().includes(searchLower))
+      );
+    }
+
+    if (minPrice) {
+      const min = parseFloat(minPrice);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      products = products.filter((p: any) => p.price >= min);
+    }
+
+    if (maxPrice) {
+      const max = parseFloat(maxPrice);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      products = products.filter((p: any) => p.price <= max);
+    }
+
+    if (inStock === 'true') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      products = products.filter((p: any) => p.stock > 0);
+    }
+
+    // Total count after filtering
+    const total = products.length;
+
+    // Sort in JS
+    const sortColumn = sortBy === 'createdAt' ? 'created_at' :
+                       sortBy === 'price' ? 'price' :
+                       sortBy === 'name' ? 'name' : 'created_at';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    products.sort((a: any, b: any) => {
+      const aVal = a[sortColumn];
+      const bVal = b[sortColumn];
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Pagination via array slice
+    const from = (page - 1) * limit;
+    products = products.slice(from, from + limit);
+
+    // Fetch related vendor and category docs
+    const vendorIds = [...new Set(products.map((p) => p.vendor_id).filter(Boolean))];
+    const categoryIds = [...new Set(products.map((p) => p.category_id).filter(Boolean))];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const vendorMap: Record<string, any> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const categoryMap: Record<string, any> = {};
+
+    await Promise.all([
+      ...vendorIds.map(async (vid) => {
+        const vDoc = await db.collection(Collections.VENDORS).doc(vid).get();
+        if (vDoc.exists) vendorMap[vid] = { id: vDoc.id, ...vDoc.data() };
+      }),
+      ...categoryIds.map(async (cid) => {
+        const cDoc = await db.collection(Collections.CATEGORIES).doc(cid).get();
+        if (cDoc.exists) categoryMap[cid] = { id: cDoc.id, ...cDoc.data() };
+      }),
+    ]);
+
+    // Transform to match frontend expectations
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedProducts = products.map((product: any) => {
+      const cat = categoryMap[product.category_id] || null;
+      const ven = vendorMap[product.vendor_id] || null;
+      return {
+        _id: product.id,
+        name: product.name,
+        slug: product.slug,
+        description: product.description,
+        images: product.images,
+        price: product.price,
+        discountPrice: product.discount_price,
+        unit: product.unit,
+        stock: product.stock,
+        minOrderQty: product.min_order_qty,
+        maxOrderQty: product.max_order_qty,
+        isVeg: product.is_veg,
+        isFeatured: product.is_featured,
+        isAvailable: product.is_available,
+        averageRating: product.average_rating,
+        totalRatings: product.total_ratings,
+        totalSold: product.total_sold,
+        category: cat ? {
+          _id: cat.id,
+          name: cat.name,
+          slug: cat.slug,
+        } : null,
+        vendor: ven ? {
+          _id: ven.id,
+          storeName: ven.store_name,
+          logo: ven.logo,
+        } : null,
+        createdAt: product.created_at,
+        updatedAt: product.updated_at,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -156,7 +192,7 @@ export async function GET(request: NextRequest) {
 // POST /api/products - Create a new product
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const body = await request.json();
 
     // Validate required fields
@@ -171,13 +207,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if category exists
-    const { data: categoryExists } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('id', body.category)
-      .single();
-
-    if (!categoryExists) {
+    const categoryDoc = await db.collection(Collections.CATEGORIES).doc(body.category).get();
+    if (!categoryDoc.exists) {
       return NextResponse.json(
         { success: false, error: 'Category not found' },
         { status: 404 }
@@ -185,13 +216,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if vendor exists
-    const { data: vendorExists } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('id', body.vendor)
-      .single();
-
-    if (!vendorExists) {
+    const vendorDoc = await db.collection(Collections.VENDORS).doc(body.vendor).get();
+    if (!vendorDoc.exists) {
       return NextResponse.json(
         { success: false, error: 'Vendor not found' },
         { status: 404 }
@@ -201,34 +227,37 @@ export async function POST(request: NextRequest) {
     // Generate slug
     const slug = body.slug || body.name.toLowerCase().replace(/\s+/g, '-');
 
-    // Create product
-    const { data: product, error } = await supabase
-      .from('products')
-      .insert({
-        vendor_id: body.vendor,
-        category_id: body.category,
-        name: body.name,
-        slug,
-        description: body.description,
-        images: body.images || ['https://via.placeholder.com/400'],
-        price: body.price,
-        discount_price: body.discountPrice,
-        unit: body.unit,
-        stock: body.stock || 0,
-        min_order_qty: body.minOrderQty || 1,
-        max_order_qty: body.maxOrderQty || 10,
-        is_veg: body.isVeg ?? true,
-        is_featured: body.isFeatured ?? false,
-        is_available: body.isAvailable ?? true,
-        is_active: body.isActive ?? true,
-      })
-      .select()
-      .single();
+    const now = new Date().toISOString();
+    const id = generateId();
 
-    if (error) throw error;
+    const productData = {
+      vendor_id: body.vendor,
+      category_id: body.category,
+      name: body.name,
+      slug,
+      description: body.description || null,
+      images: body.images || ['https://via.placeholder.com/400'],
+      price: body.price,
+      discount_price: body.discountPrice || null,
+      unit: body.unit,
+      stock: body.stock || 0,
+      min_order_qty: body.minOrderQty || 1,
+      max_order_qty: body.maxOrderQty || 10,
+      is_veg: body.isVeg ?? true,
+      is_featured: body.isFeatured ?? false,
+      is_available: body.isAvailable ?? true,
+      is_active: body.isActive ?? true,
+      average_rating: 0,
+      total_ratings: 0,
+      total_sold: 0,
+      created_at: now,
+      updated_at: now,
+    };
+
+    await db.collection(Collections.PRODUCTS).doc(id).set(productData);
 
     return NextResponse.json(
-      { success: true, data: { _id: product.id, ...product } },
+      { success: true, data: { _id: id, id, ...productData } },
       { status: 201 }
     );
   } catch (error) {

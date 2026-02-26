@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, docToObj } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -17,6 +17,65 @@ function verifyAdminToken(request: NextRequest) {
     return decoded;
   } catch {
     return null;
+  }
+}
+
+async function getProductWithJoins(db: FirebaseFirestore.Firestore, id: string) {
+  const prodDoc = await db.collection(Collections.PRODUCTS).doc(id).get();
+  const product = docToObj<Record<string, unknown>>(prodDoc);
+  if (!product) return null;
+
+  const [catDoc, venDoc] = await Promise.all([
+    product.category_id
+      ? db.collection(Collections.CATEGORIES).doc(product.category_id as string).get()
+      : null,
+    product.vendor_id
+      ? db.collection(Collections.VENDORS).doc(product.vendor_id as string).get()
+      : null,
+  ]);
+
+  const catData = catDoc?.exists ? catDoc.data()! : null;
+  const venData = venDoc?.exists ? venDoc.data()! : null;
+
+  return {
+    ...product,
+    category: catData ? { id: catDoc!.id, name: catData.name, slug: catData.slug } : null,
+    vendor: venData ? { id: venDoc!.id, store_name: venData.store_name } : null,
+  };
+}
+
+// Get single product
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const decoded = verifyAdminToken(request);
+    if (!decoded) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await params;
+    const db = getDb();
+    const product = await getProductWithJoins(db, id);
+
+    if (!product) {
+      return NextResponse.json(
+        { success: false, message: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: product });
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    return NextResponse.json(
+      { success: false, message: 'Server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -38,7 +97,7 @@ export async function PUT(
     const body = await request.json();
     const { name, description, price, discountPrice, unit, categoryId, vendorId, images, stock, isVeg, isFeatured, isAvailable, isActive, tags, minOrderQty, maxOrderQty } = body;
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     const updateData: Record<string, unknown> = {};
     if (name) {
@@ -62,18 +121,10 @@ export async function PUT(
     if (maxOrderQty !== undefined) updateData.max_order_qty = maxOrderQty;
     updateData.updated_at = new Date().toISOString();
 
-    const { data: product, error } = await supabase
-      .from('products')
-      .update(updateData)
-      .eq('id', id)
-      .select(`
-        *,
-        category:categories(id, name, slug),
-        vendor:vendors(id, store_name)
-      `)
-      .single();
+    await db.collection(Collections.PRODUCTS).doc(id).update(updateData);
 
-    if (error) throw error;
+    // Re-read with joins
+    const product = await getProductWithJoins(db, id);
 
     return NextResponse.json({
       success: true,
@@ -104,14 +155,9 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    await db.collection(Collections.PRODUCTS).doc(id).delete();
 
     return NextResponse.json({
       success: true,

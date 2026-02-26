@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -27,24 +27,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    // Find user by email
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .eq('role', 'admin')
-      .single();
+    // Find user by email and role=admin
+    const usersSnapshot = await db
+      .collection(Collections.USERS)
+      .where('email', '==', email.toLowerCase())
+      .where('role', '==', 'admin')
+      .limit(1)
+      .get();
 
-    const user = data as User | null;
-
-    if (error || !user) {
+    if (usersSnapshot.empty) {
       return NextResponse.json(
         { success: false, message: 'Invalid admin credentials' },
         { status: 401 }
       );
     }
+
+    const userDoc = usersSnapshot.docs[0];
+    const user = { id: userDoc.id, ...userDoc.data() } as User;
 
     // Check if user is active
     if (!user.is_active) {
@@ -77,10 +78,9 @@ export async function POST(request: NextRequest) {
     );
 
     // Update last login
-    await supabase
-      .from('users')
-      .update({ updated_at: new Date().toISOString() } as Record<string, unknown>)
-      .eq('id', user.id);
+    await db.collection(Collections.USERS).doc(user.id).update({
+      updated_at: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       success: true,

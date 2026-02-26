@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // =============================================================================
@@ -332,35 +332,27 @@ export async function GET(): Promise<NextResponse> {
       return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     // Fetch user profile
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, name, email, phone, image, address, is_active, is_verified, created_at, metadata')
-      .eq('id', userId)
-      .single();
+    const userSnap = await db.collection(Collections.USERS).doc(userId).get();
 
-    if (userError || !user) {
+    if (!userSnap.exists) {
       return createErrorResponse(ERROR_MESSAGES.PROFILE_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
     }
 
-    // Fetch delivery statistics in parallel
-    const [ratedOrdersResult, deliveryCountResult] = await Promise.all([
-      supabase
-        .from('orders')
-        .select('delivery_rating')
-        .eq('delivery_partner_id', userId)
-        .not('delivery_rating', 'is', null),
-      supabase
-        .from('orders')
-        .select('id', { count: 'exact', head: true })
-        .eq('delivery_partner_id', userId)
-        .eq('status', 'delivered'),
-    ]);
+    const user = userSnap.data()!;
 
-    const ratedOrders = ratedOrdersResult.data;
-    const totalDeliveries = deliveryCountResult.count ?? 0;
+    // Fetch delivery statistics: all orders for this delivery partner
+    const ordersSnap = await db.collection(Collections.ORDERS)
+      .where('delivery_partner_id', '==', userId)
+      .get();
+
+    const allOrders = ordersSnap.docs.map(doc => doc.data());
+    const ratedOrders = allOrders
+      .filter(o => o.delivery_rating != null)
+      .map(o => ({ delivery_rating: o.delivery_rating as number }));
+    const totalDeliveries = allOrders.filter(o => o.status === 'delivered').length;
     const averageRating = calculateAverageRating(ratedOrders);
     const metadata = (user.metadata as DeliveryPartnerMetadata) || {};
 
@@ -380,7 +372,7 @@ export async function GET(): Promise<NextResponse> {
       : DEFAULT_PAYMENT_OPTIONS;
 
     const profile: DeliveryPartnerProfile = {
-      _id: user.id,
+      _id: userSnap.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
@@ -390,7 +382,7 @@ export async function GET(): Promise<NextResponse> {
       isVerified: user.is_verified,
       joinedDate: user.created_at,
       rating: averageRating,
-      totalRatings: ratedOrders?.length ?? 0,
+      totalRatings: ratedOrders.length,
       totalDeliveries,
       vehicle: metadata.vehicle ?? null,
       bankDetails: metadata.bankDetails ?? null,
@@ -431,10 +423,10 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     }
 
     const { name, phone, email, address, vehicle, bankDetails, paymentOptions } = payload;
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     // Build the update object for basic fields
-    const userUpdate: Record<string, unknown> = {};
+    const userUpdate: Record<string, unknown> = { updated_at: new Date().toISOString() };
     
     if (name?.trim()) userUpdate.name = name.trim();
     if (phone?.trim()) userUpdate.phone = phone.trim();
@@ -442,18 +434,14 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     if (address?.trim()) userUpdate.address = address.trim();
 
     // Fetch current metadata to merge with updates
-    const { data: currentUser, error: fetchError } = await supabase
-      .from('users')
-      .select('metadata')
-      .eq('id', userId)
-      .single();
+    const userSnap = await db.collection(Collections.USERS).doc(userId).get();
 
-    if (fetchError) {
-      console.error('[DeliveryProfile:PUT] Error fetching current user:', fetchError);
+    if (!userSnap.exists) {
+      console.error('[DeliveryProfile:PUT] User not found:', userId);
       return createErrorResponse(ERROR_MESSAGES.UPDATE_FAILED, HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
 
-    const currentMetadata = (currentUser?.metadata as DeliveryPartnerMetadata) || {};
+    const currentMetadata = (userSnap.data()!.metadata as DeliveryPartnerMetadata) || {};
 
     // Update metadata fields if provided
     if (vehicle !== undefined) {
@@ -482,15 +470,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     userUpdate.metadata = currentMetadata;
 
     // Perform the update
-    const { error: updateError } = await supabase
-      .from('users')
-      .update(userUpdate)
-      .eq('id', userId);
-
-    if (updateError) {
-      console.error('[DeliveryProfile:PUT] Error updating profile:', updateError);
-      return createErrorResponse(ERROR_MESSAGES.UPDATE_FAILED, HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    }
+    await db.collection(Collections.USERS).doc(userId).update(userUpdate);
 
     return createSuccessResponse(null, 'Profile updated successfully');
   } catch (error) {

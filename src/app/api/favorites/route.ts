@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, generateId } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // GET /api/favorites - Get user favorites
@@ -10,27 +10,53 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
-    const { data: favorites, error } = await supabase
-      .from('favorites')
-      .select(`
-        id,
-        product_id,
-        created_at,
-        product:products(
-          id, name, slug, images, price, discount_price, unit, is_veg, average_rating, total_ratings, is_available,
-          vendor:vendors(id, store_name),
-          category:categories(id, name, slug)
-        )
-      `)
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false });
+    const db = getDb();
 
-    if (error) throw error;
+    // Fetch favorites for the user
+    const favSnap = await db.collection(Collections.FAVORITES)
+      .where('user_id', '==', session.user.id)
+      .orderBy('created_at', 'desc')
+      .get();
 
-    const transformed = (favorites || []).map((f: Record<string, unknown>) => {
-      const p = f.product as Record<string, unknown> | null;
-      const v = p?.vendor as Record<string, unknown> | null;
+    const favorites = favSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (favorites.length === 0) {
+      return NextResponse.json({ success: true, data: [] });
+    }
+
+    // Collect unique product IDs
+    const productIds = [...new Set(favorites.map((f: Record<string, unknown>) => f.product_id as string))];
+
+    // Batch-fetch products
+    const productMap: Record<string, Record<string, unknown>> = {};
+    for (let i = 0; i < productIds.length; i += 10) {
+      const batch = productIds.slice(i, i + 10);
+      const snap = await db.collection(Collections.PRODUCTS).where('__name__', 'in', batch).get();
+      snap.docs.forEach(d => { productMap[d.id] = { id: d.id, ...d.data() }; });
+    }
+
+    // Collect vendor & category IDs from products
+    const vendorIds = [...new Set(Object.values(productMap).map(p => p.vendor_id as string).filter(Boolean))];
+    const categoryIds = [...new Set(Object.values(productMap).map(p => p.category_id as string).filter(Boolean))];
+
+    const vendorMap: Record<string, Record<string, unknown>> = {};
+    for (let i = 0; i < vendorIds.length; i += 10) {
+      const batch = vendorIds.slice(i, i + 10);
+      const snap = await db.collection(Collections.VENDORS).where('__name__', 'in', batch).get();
+      snap.docs.forEach(d => { vendorMap[d.id] = { id: d.id, ...d.data() }; });
+    }
+
+    const categoryMap: Record<string, Record<string, unknown>> = {};
+    for (let i = 0; i < categoryIds.length; i += 10) {
+      const batch = categoryIds.slice(i, i + 10);
+      const snap = await db.collection(Collections.CATEGORIES).where('__name__', 'in', batch).get();
+      snap.docs.forEach(d => { categoryMap[d.id] = { id: d.id, ...d.data() }; });
+    }
+
+    const transformed = favorites.map((f: Record<string, unknown>) => {
+      const p = productMap[f.product_id as string] || null;
+      const v = p ? vendorMap[p.vendor_id as string] || null : null;
+      const c = p ? categoryMap[p.category_id as string] || null : null;
       return {
         id: f.id,
         productId: f.product_id,
@@ -46,7 +72,8 @@ export async function GET() {
           averageRating: p.average_rating,
           totalRatings: p.total_ratings,
           isAvailable: p.is_available,
-          vendor: v ? { _id: v.id, storeName: v.store_name } : null,
+          vendor: v ? { _id: (v as Record<string, unknown>).id, storeName: (v as Record<string, unknown>).store_name } : null,
+          category: c ? { _id: (c as Record<string, unknown>).id, name: (c as Record<string, unknown>).name, slug: (c as Record<string, unknown>).slug } : null,
         } : null,
         createdAt: f.created_at,
       };
@@ -67,7 +94,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const { productId } = await request.json();
 
     if (!productId) {
@@ -75,26 +102,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already favorited
-    const { data: existing } = await supabase
-      .from('favorites')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .eq('product_id', productId)
-      .single();
+    const existingSnap = await db.collection(Collections.FAVORITES)
+      .where('user_id', '==', session.user.id)
+      .where('product_id', '==', productId)
+      .limit(1)
+      .get();
 
-    if (existing) {
-      return NextResponse.json({ success: true, data: existing, message: 'Already in favorites' });
+    if (!existingSnap.empty) {
+      const doc = existingSnap.docs[0];
+      return NextResponse.json({ success: true, data: { id: doc.id, ...doc.data() }, message: 'Already in favorites' });
     }
 
-    const { data: favorite, error } = await supabase
-      .from('favorites')
-      .insert({ user_id: session.user.id, product_id: productId })
-      .select()
-      .single();
+    const now = new Date().toISOString();
+    const id = generateId();
+    const favorite = {
+      user_id: session.user.id,
+      product_id: productId,
+      created_at: now,
+      updated_at: now,
+    };
+    await db.collection(Collections.FAVORITES).doc(id).set(favorite);
 
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, data: favorite }, { status: 201 });
+    return NextResponse.json({ success: true, data: { id, ...favorite } }, { status: 201 });
   } catch (error) {
     console.error('Error adding favorite:', error);
     return NextResponse.json({ success: false, error: 'Failed to add favorite' }, { status: 500 });
@@ -109,16 +138,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const { productId } = await request.json();
 
-    const { error } = await supabase
-      .from('favorites')
-      .delete()
-      .eq('user_id', session.user.id)
-      .eq('product_id', productId);
+    const snap = await db.collection(Collections.FAVORITES)
+      .where('user_id', '==', session.user.id)
+      .where('product_id', '==', productId)
+      .get();
 
-    if (error) throw error;
+    const batch = db.batch();
+    snap.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
 
     return NextResponse.json({ success: true });
   } catch (error) {

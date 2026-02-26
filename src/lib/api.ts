@@ -5,9 +5,7 @@
  * instead of raw fetch() calls. Handles auth tokens, error formatting,
  * and response normalization.
  *
- * Next.js API routes (/api/*) remain the primary data layer (Supabase).
- * The Express backend (NEXT_PUBLIC_BACKEND_URL) is used for real-time
- * features: WebSocket delivery tracking, push notifications, etc.
+ * Next.js API routes (/api/*) remain the primary data layer (Firebase Firestore).
  */
 
 // ---------------------------------------------------------------------------

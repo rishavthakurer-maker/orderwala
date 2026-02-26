@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // Haversine distance in km
@@ -23,48 +23,56 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const { searchParams } = new URL(request.url);
     const lat = parseFloat(searchParams.get('lat') || '0');
     const lng = parseFloat(searchParams.get('lng') || '0');
     const radius = parseFloat(searchParams.get('radius') || '10'); // default 10km
 
     // Fetch available orders (status = 'ready', no delivery partner)
-    const { data: orders, error } = await supabase
-      .from('orders')
-      .select(`
-        id, order_number, items, total, delivery_fee, delivery_address, created_at, status,
-        vendor:vendors(id, store_name, phone, address, logo, category)
-      `)
-      .is('delivery_partner_id', null)
-      .eq('status', 'ready')
-      .order('created_at', { ascending: false })
-      .limit(50);
+    const snapshot = await db.collection(Collections.ORDERS)
+      .where('status', '==', 'ready')
+      .where('delivery_partner_id', '==', null)
+      .orderBy('created_at', 'desc')
+      .limit(50)
+      .get();
 
-    if (error) throw error;
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Record<string, unknown>[];
 
-interface NearbyOrderResult {
-  _id: unknown;
-  orderId: unknown;
-  items: unknown[];
-  itemCount: number;
-  total: unknown;
-  deliveryFee: unknown;
-  deliveryEarnings: unknown;
-  status: unknown;
-  createdAt: unknown;
-  deliveryAddress: Record<string, unknown>;
-  vendor: Record<string, unknown> | null;
-  pickupDistance: number | null;
-  deliveryDistance: number | null;
-  totalDistance: number | null;
-}
+    // Fetch vendor data for each order
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const vendorCache: Record<string, any> = {};
+    const getVendor = async (vendorId: string) => {
+      if (vendorCache[vendorId] !== undefined) return vendorCache[vendorId];
+      const vendorSnap = await db.collection(Collections.VENDORS).doc(vendorId).get();
+      const vendor = vendorSnap.exists ? { id: vendorSnap.id, ...vendorSnap.data()! } : null;
+      vendorCache[vendorId] = vendor;
+      return vendor;
+    };
+
+    interface NearbyOrderResult {
+      _id: unknown;
+      orderId: unknown;
+      items: unknown[];
+      itemCount: number;
+      total: unknown;
+      deliveryFee: unknown;
+      deliveryEarnings: unknown;
+      status: unknown;
+      createdAt: unknown;
+      deliveryAddress: Record<string, unknown>;
+      vendor: Record<string, unknown> | null;
+      pickupDistance: number | null;
+      deliveryDistance: number | null;
+      totalDistance: number | null;
+    }
 
     // Calculate distances and filter by radius
-    const ordersWithDistance: NearbyOrderResult[] = (orders || []).map((o: Record<string, unknown>) => {
+    const ordersWithDistance: NearbyOrderResult[] = await Promise.all(orders.map(async (o) => {
       const deliveryAddr = o.delivery_address as Record<string, unknown> | null;
-      const vendor = o.vendor as Record<string, unknown> | null;
-      const vendorAddr = vendor?.address as Record<string, unknown> | null;
+      const vendor = o.vendor_id ? await getVendor(o.vendor_id as string) : null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const vendorAddr = (vendor as any)?.address as Record<string, unknown> | null;
 
       // Try to get vendor location from vendor address
       let vendorLat = 0, vendorLng = 0;
@@ -131,7 +139,7 @@ interface NearbyOrderResult {
         deliveryDistance: deliveryDistance !== null ? Math.round(deliveryDistance * 10) / 10 : null,
         totalDistance: totalDistance ? Math.round(totalDistance * 10) / 10 : null,
       };
-    });
+    }));
 
     // Filter by radius (if lat/lng provided and distances can be calculated)
     let filtered = ordersWithDistance;

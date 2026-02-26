@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // GET /api/delivery/onboarding - Check onboarding status
@@ -10,17 +10,14 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
-    const { data: user } = await supabase
-      .from('users')
-      .select('metadata, is_verified')
-      .eq('id', session.user.id)
-      .single();
+    const db = getDb();
+    const userSnap = await db.collection(Collections.USERS).doc(session.user.id).get();
 
-    if (!user) {
+    if (!userSnap.exists) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
+    const user = userSnap.data()!;
     const metadata = (user.metadata as Record<string, unknown>) || {};
     const onboarding = (metadata.onboarding as Record<string, unknown>) || {};
 
@@ -66,19 +63,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const userId = session.user.id;
     const body = await request.json();
     const { step, data } = body;
 
     // Get current metadata
-    const { data: user } = await supabase
-      .from('users')
-      .select('metadata')
-      .eq('id', userId)
-      .single();
-
-    const currentMetadata = (user?.metadata as Record<string, unknown>) || {};
+    const userSnap = await db.collection(Collections.USERS).doc(userId).get();
+    const currentMetadata = (userSnap.exists ? (userSnap.data()!.metadata as Record<string, unknown>) : null) || {};
 
     switch (step) {
       case 'vehicle': {
@@ -136,12 +128,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Update metadata
-    const { error } = await supabase
-      .from('users')
-      .update({ metadata: currentMetadata, updated_at: new Date().toISOString() })
-      .eq('id', userId);
-
-    if (error) throw error;
+    await db.collection(Collections.USERS).doc(userId).update({
+      metadata: currentMetadata,
+      updated_at: new Date().toISOString(),
+    });
 
     return NextResponse.json({ success: true, message: `${step} saved successfully` });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, generateId, Collections, docToObj } from '@/lib/firebase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,55 +12,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const otpCol = db.collection(Collections.OTP_VERIFICATIONS);
+    const usersCol = db.collection(Collections.USERS);
 
     // Find the OTP record
-    const { data: otpRecord, error: otpError } = await supabase
-      .from('otp_verifications')
-      .select('*')
-      .eq('phone', phone)
-      .eq('otp', otp)
-      .eq('is_verified', false)
-      .gt('expires_at', new Date().toISOString())
-      .single();
+    const otpSnap = await otpCol
+      .where('phone', '==', phone)
+      .where('otp', '==', otp)
+      .where('is_verified', '==', false)
+      .where('expires_at', '>', new Date().toISOString())
+      .limit(1)
+      .get();
 
-    if (otpError || !otpRecord) {
+    if (otpSnap.empty) {
       return NextResponse.json(
         { error: 'Invalid or expired OTP' },
         { status: 400 }
       );
     }
 
+    const otpDoc = otpSnap.docs[0];
+
     // Mark OTP as verified
-    await supabase
-      .from('otp_verifications')
-      .update({ is_verified: true })
-      .eq('id', otpRecord.id);
+    await otpDoc.ref.update({ is_verified: true });
 
     // Find or create user
-    const { data: existingUser, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('phone', phone)
-      .single();
+    const userSnap = await usersCol
+      .where('phone', '==', phone)
+      .limit(1)
+      .get();
 
-    let user;
+    let user: { id: string; name: string; phone: string; role: string };
 
-    if (userError || !existingUser) {
+    if (userSnap.empty) {
       // Create new user
-      const { data: newUser, error: createError } = await supabase
-        .from('users')
-        .insert({
-          name: name || `User${phone.slice(-4)}`,
-          phone,
-          role: 'customer',
-          is_verified: true,
-          is_active: true,
-        })
-        .select()
-        .single();
+      const userId = generateId();
+      const now = new Date().toISOString();
+      const newUserData = {
+        name: name || `User${phone.slice(-4)}`,
+        phone,
+        role: 'customer',
+        is_verified: true,
+        is_active: true,
+        created_at: now,
+        updated_at: now,
+      };
 
-      if (createError) {
+      try {
+        await usersCol.doc(userId).set(newUserData);
+      } catch (createError) {
         console.error('Error creating user:', createError);
         return NextResponse.json(
           { error: 'Failed to create user' },
@@ -68,17 +69,18 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      user = newUser;
+      user = {
+        id: userId,
+        name: newUserData.name,
+        phone: newUserData.phone,
+        role: newUserData.role,
+      };
     } else {
       // Update verification status
-      const { data: updatedUser, error: updateError } = await supabase
-        .from('users')
-        .update({ is_verified: true })
-        .eq('id', existingUser.id)
-        .select()
-        .single();
-
-      if (updateError) {
+      const existingDoc = userSnap.docs[0];
+      try {
+        await existingDoc.ref.update({ is_verified: true, updated_at: new Date().toISOString() });
+      } catch (updateError) {
         console.error('Error updating user:', updateError);
         return NextResponse.json(
           { error: 'Failed to update user' },
@@ -86,7 +88,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      user = updatedUser;
+      const existingData = existingDoc.data();
+      user = {
+        id: existingDoc.id,
+        name: existingData.name,
+        phone: existingData.phone,
+        role: existingData.role,
+      };
     }
 
     return NextResponse.json({

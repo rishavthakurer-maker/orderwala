@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, generateId, docsToArray } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -31,14 +31,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    const { data: categories, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('sort_order', { ascending: true });
+    const snapshot = await db
+      .collection(Collections.CATEGORIES)
+      .orderBy('sort_order', 'asc')
+      .get();
 
-    if (error) throw error;
+    const categories = docsToArray<Record<string, unknown>>(snapshot);
 
     return NextResponse.json({
       success: true,
@@ -77,27 +77,27 @@ export async function POST(request: NextRequest) {
     // Generate slug
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const id = generateId();
+    const now = new Date().toISOString();
 
-    const { data: category, error } = await supabase
-      .from('categories')
-      .insert({
-        name,
-        slug,
-        description: description || '',
-        image: image || '',
-        icon: icon || '',
-        sort_order: sortOrder || 0,
-        is_active: true,
-      } as Record<string, unknown>)
-      .select()
-      .single();
+    const categoryData: Record<string, unknown> = {
+      name,
+      slug,
+      description: description || '',
+      image: image || '',
+      icon: icon || '',
+      sort_order: sortOrder || 0,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    };
 
-    if (error) throw error;
+    await db.collection(Collections.CATEGORIES).doc(id).set(categoryData);
 
     return NextResponse.json({
       success: true,
-      data: category,
+      data: { id, ...categoryData },
       message: 'Category created successfully',
     });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getStorageBucket } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const folder = (formData.get('folder') as string) || 'products';
 
     if (!file) {
       return NextResponse.json(
@@ -56,69 +57,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminSupabaseClient();
+    const bucket = getStorageBucket();
 
     // Generate unique filename
     const ext = file.name.split('.').pop() || 'jpg';
-    const fileName = `products/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+    const filePath = `uploads/${folder}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
-      .from('images')
-      .upload(fileName, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
+    // Upload to Firebase Storage
+    const bucketFile = bucket.file(filePath);
+    await bucketFile.save(buffer, {
+      contentType: file.type,
+    });
 
-    if (error) {
-      console.error('Upload error:', error);
-      // If bucket doesn't exist, create it
-      if (error.message?.includes('not found') || error.statusCode === '404') {
-        // Try creating the bucket
-        const { error: bucketError } = await supabase.storage.createBucket('images', {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-          allowedMimeTypes: allowedTypes,
-        });
+    // Make file publicly accessible
+    await bucketFile.makePublic();
 
-        if (bucketError && !bucketError.message?.includes('already exists')) {
-          throw bucketError;
-        }
-
-        // Retry upload
-        const { data: retryData, error: retryError } = await supabase.storage
-          .from('images')
-          .upload(fileName, buffer, {
-            contentType: file.type,
-            upsert: false,
-          });
-
-        if (retryError) throw retryError;
-
-        const { data: urlData } = supabase.storage
-          .from('images')
-          .getPublicUrl(retryData.path);
-
-        return NextResponse.json({
-          success: true,
-          data: { url: urlData.publicUrl, path: retryData.path },
-        });
-      }
-      throw error;
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('images')
-      .getPublicUrl(data.path);
+    // Build public URL
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
 
     return NextResponse.json({
       success: true,
-      data: { url: urlData.publicUrl, path: data.path },
+      data: { url: publicUrl, path: filePath },
     });
   } catch (error) {
     console.error('Upload error:', error);

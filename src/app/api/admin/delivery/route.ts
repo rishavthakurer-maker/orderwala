@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, generateId, docsToArray, docToObj } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -25,24 +25,36 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search') || '';
+    const search = (searchParams.get('search') || '').toLowerCase();
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
-    let query = supabase
-      .from('users')
-      .select('id, name, email, phone, image, is_active, is_verified, created_at')
-      .eq('role', 'delivery')
-      .order('created_at', { ascending: false });
+    const snapshot = await db
+      .collection(Collections.USERS)
+      .where('role', '==', 'delivery')
+      .orderBy('created_at', 'desc')
+      .get();
+
+    let partners = docsToArray<Record<string, unknown>>(snapshot).map(doc => ({
+      id: doc.id,
+      name: doc.name,
+      email: doc.email,
+      phone: doc.phone,
+      image: doc.image,
+      is_active: doc.is_active,
+      is_verified: doc.is_verified,
+      created_at: doc.created_at,
+    }));
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
+      partners = partners.filter(p =>
+        (p.name && String(p.name).toLowerCase().includes(search)) ||
+        (p.phone && String(p.phone).toLowerCase().includes(search)) ||
+        (p.email && String(p.email).toLowerCase().includes(search))
+      );
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, data: data || [] });
+    return NextResponse.json({ success: true, data: partners });
   } catch (error) {
     console.error('Error fetching delivery partners:', error);
     return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
@@ -57,22 +69,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const id = generateId();
+    const now = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('users')
-      .insert({
-        name: body.name,
-        phone: body.phone,
-        email: body.email || null,
-        role: 'delivery',
-        is_active: true,
-        is_verified: body.is_verified || false,
-      })
-      .select()
-      .single();
+    const newPartner = {
+      name: body.name,
+      phone: body.phone,
+      email: body.email || null,
+      role: 'delivery',
+      is_active: true,
+      is_verified: body.is_verified || false,
+      created_at: now,
+      updated_at: now,
+    };
 
-    if (error) throw error;
+    await db.collection(Collections.USERS).doc(id).set(newPartner);
+
+    const createdDoc = await db.collection(Collections.USERS).doc(id).get();
+    const data = docToObj<Record<string, unknown>>(createdDoc);
 
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {

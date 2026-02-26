@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { createAdminSupabaseClient } from '@/lib/supabase';
+import { getDb, Collections } from '@/lib/firebase';
 
 export async function GET() {
   try {
@@ -9,27 +9,27 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     // Get vendor
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single();
+    const vendorSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
 
-    if (!vendor) {
+    if (vendorSnap.empty) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 });
     }
 
-    // Get all orders for this vendor
-    const { data: orders } = await supabase
-      .from('orders')
-      .select('id, total, status, created_at')
-      .eq('vendor_id', vendor.id)
-      .order('created_at', { ascending: true });
+    const vendor = { id: vendorSnap.docs[0].id, ...vendorSnap.docs[0].data() };
 
-    const allOrders = orders || [];
+    // Get all orders for this vendor
+    const ordersSnap = await db.collection(Collections.ORDERS)
+      .where('vendor_id', '==', vendor.id)
+      .orderBy('created_at', 'asc')
+      .get();
+
+    const allOrders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Record<string, unknown>[];
 
     // Calculate monthly revenue (last 6 months)
     const now = new Date();
@@ -39,13 +39,13 @@ export async function GET() {
       const monthStart = d.toISOString();
       const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).toISOString();
       const monthLabel = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-      
+
       const monthOrders = allOrders.filter(
-        (o: Record<string, unknown>) => String(o.created_at) >= monthStart && String(o.created_at) <= monthEnd && o.status === 'delivered'
+        (o) => String(o.created_at) >= monthStart && String(o.created_at) <= monthEnd && o.status === 'delivered'
       );
       monthlyRevenue.push({
         month: monthLabel,
-        revenue: monthOrders.reduce((sum: number, o: Record<string, unknown>) => sum + (Number(o.total) || 0), 0),
+        revenue: monthOrders.reduce((sum: number, o) => sum + (Number(o.total) || 0), 0),
         orders: monthOrders.length,
       });
     }
@@ -60,40 +60,40 @@ export async function GET() {
       const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
 
       const dayOrders = allOrders.filter(
-        (o: Record<string, unknown>) => String(o.created_at) >= dayStart && String(o.created_at) <= dayEnd && o.status === 'delivered'
+        (o) => String(o.created_at) >= dayStart && String(o.created_at) <= dayEnd && o.status === 'delivered'
       );
       dailyRevenue.push({
         day: dayLabel,
-        revenue: dayOrders.reduce((sum: number, o: Record<string, unknown>) => sum + (Number(o.total) || 0), 0),
+        revenue: dayOrders.reduce((sum: number, o) => sum + (Number(o.total) || 0), 0),
         orders: dayOrders.length,
       });
     }
 
     // Order status breakdown
     const statusBreakdown = {
-      delivered: allOrders.filter((o: Record<string, unknown>) => o.status === 'delivered').length,
-      cancelled: allOrders.filter((o: Record<string, unknown>) => o.status === 'cancelled').length,
-      pending: allOrders.filter((o: Record<string, unknown>) => o.status === 'pending').length,
-      confirmed: allOrders.filter((o: Record<string, unknown>) => o.status === 'confirmed').length,
-      preparing: allOrders.filter((o: Record<string, unknown>) => o.status === 'preparing').length,
-      ready: allOrders.filter((o: Record<string, unknown>) => o.status === 'ready').length,
+      delivered: allOrders.filter((o) => o.status === 'delivered').length,
+      cancelled: allOrders.filter((o) => o.status === 'cancelled').length,
+      pending: allOrders.filter((o) => o.status === 'pending').length,
+      confirmed: allOrders.filter((o) => o.status === 'confirmed').length,
+      preparing: allOrders.filter((o) => o.status === 'preparing').length,
+      ready: allOrders.filter((o) => o.status === 'ready').length,
     };
 
-    // Top products
-    const { data: orderItems } = await supabase
-      .from('order_items')
-      .select('product_id, product_name, quantity, price')
-      .in('order_id', allOrders.filter((o: Record<string, unknown>) => o.status === 'delivered').map((o: Record<string, unknown>) => String(o.id)));
-
+    // Top products – aggregate from order items embedded in delivered orders
     const productMap: Record<string, { name: string; quantity: number; revenue: number }> = {};
-    (orderItems || []).forEach((item: Record<string, unknown>) => {
-      const pid = String(item.product_id);
-      if (!productMap[pid]) {
-        productMap[pid] = { name: String(item.product_name || 'Unknown'), quantity: 0, revenue: 0 };
+    const deliveredOrders = allOrders.filter((o) => o.status === 'delivered');
+    for (const order of deliveredOrders) {
+      const items = Array.isArray(order.items) ? order.items : [];
+      for (const item of items) {
+        const itm = item as Record<string, unknown>;
+        const pid = String(itm.product_id || itm.id || 'unknown');
+        if (!productMap[pid]) {
+          productMap[pid] = { name: String(itm.product_name || itm.name || 'Unknown'), quantity: 0, revenue: 0 };
+        }
+        productMap[pid].quantity += Number(itm.quantity) || 0;
+        productMap[pid].revenue += (Number(itm.quantity) || 0) * (Number(itm.price) || 0);
       }
-      productMap[pid].quantity += Number(item.quantity) || 0;
-      productMap[pid].revenue += (Number(item.quantity) || 0) * (Number(item.price) || 0);
-    });
+    }
 
     const topProducts = Object.entries(productMap)
       .map(([id, data]) => ({ id, ...data }))
@@ -101,11 +101,10 @@ export async function GET() {
       .slice(0, 5);
 
     // Summary stats
-    const totalRevenue = allOrders
-      .filter((o: Record<string, unknown>) => o.status === 'delivered')
-      .reduce((sum: number, o: Record<string, unknown>) => sum + (Number(o.total) || 0), 0);
+    const totalRevenue = deliveredOrders
+      .reduce((sum: number, o) => sum + (Number(o.total) || 0), 0);
     const totalOrders = allOrders.length;
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / allOrders.filter((o: Record<string, unknown>) => o.status === 'delivered').length : 0;
+    const avgOrderValue = deliveredOrders.length > 0 ? totalRevenue / deliveredOrders.length : 0;
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import { auth } from '@/lib/auth';
 
 // GET /api/delivery/earnings - Get delivery partner earnings
@@ -10,84 +10,57 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
     const userId = session.user.id;
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || 'week'; // today | week | month | all
 
     const now = new Date();
-    let startDate: string | null = null;
 
-    if (period === 'today') {
-      const d = new Date(now); d.setHours(0, 0, 0, 0);
-      startDate = d.toISOString();
-    } else if (period === 'week') {
-      const d = new Date(now); d.setDate(d.getDate() - 7);
-      startDate = d.toISOString();
-    } else if (period === 'month') {
-      const d = new Date(now); d.setMonth(d.getMonth() - 1);
-      startDate = d.toISOString();
-    }
+    // Fetch all delivered orders for this delivery partner
+    const allDeliveredSnap = await db.collection(Collections.ORDERS)
+      .where('delivery_partner_id', '==', userId)
+      .where('status', '==', 'delivered')
+      .orderBy('delivered_at', 'desc')
+      .get();
 
-    // Get delivered orders with earnings
-    let earningsQuery = supabase
-      .from('orders')
-      .select('id, order_number, delivery_earnings, delivered_at, total, items')
-      .eq('delivery_partner_id', userId)
-      .eq('status', 'delivered')
-      .order('delivered_at', { ascending: false });
+    const allDelivered = allDeliveredSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Record<string, unknown>[];
 
-    if (startDate) {
-      earningsQuery = earningsQuery.gte('delivered_at', startDate);
-    }
+    // Helper to filter by date
+    const filterByDate = (orders: Record<string, unknown>[], startDate: string | null) => {
+      if (!startDate) return orders;
+      return orders.filter(o => (o.delivered_at as string) >= startDate);
+    };
 
-    const { data: earningsData } = await earningsQuery;
+    // Calculate period start dates
+    const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
+    const weekStart = new Date(now); weekStart.setDate(weekStart.getDate() - 7);
+    const monthStart = new Date(now); monthStart.setMonth(monthStart.getMonth() - 1);
 
-    // Calculate totals
-    const totalEarnings = earningsData?.reduce((sum: number, o: Record<string, number>) => sum + (o.delivery_earnings || 0), 0) || 0;
-    const totalDeliveries = earningsData?.length || 0;
+    let periodStartDate: string | null = null;
+    if (period === 'today') periodStartDate = todayStart.toISOString();
+    else if (period === 'week') periodStartDate = weekStart.toISOString();
+    else if (period === 'month') periodStartDate = monthStart.toISOString();
+
+    // Filter for the requested period
+    const earningsData = filterByDate(allDelivered, periodStartDate);
+    const totalEarnings = earningsData.reduce((sum, o) => sum + ((o.delivery_earnings as number) || 0), 0);
+    const totalDeliveries = earningsData.length;
 
     // Today's earnings
-    const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
-    const { data: todayData } = await supabase
-      .from('orders')
-      .select('delivery_earnings')
-      .eq('delivery_partner_id', userId)
-      .eq('status', 'delivered')
-      .gte('delivered_at', todayStart.toISOString());
-
-    const todayEarnings = todayData?.reduce((sum: number, o: Record<string, number>) => sum + (o.delivery_earnings || 0), 0) || 0;
+    const todayData = filterByDate(allDelivered, todayStart.toISOString());
+    const todayEarnings = todayData.reduce((sum, o) => sum + ((o.delivery_earnings as number) || 0), 0);
 
     // This week
-    const weekStart = new Date(now); weekStart.setDate(weekStart.getDate() - 7);
-    const { data: weekData } = await supabase
-      .from('orders')
-      .select('delivery_earnings, delivered_at')
-      .eq('delivery_partner_id', userId)
-      .eq('status', 'delivered')
-      .gte('delivered_at', weekStart.toISOString());
-
-    const weekEarnings = weekData?.reduce((sum: number, o: Record<string, number>) => sum + (o.delivery_earnings || 0), 0) || 0;
+    const weekData = filterByDate(allDelivered, weekStart.toISOString());
+    const weekEarnings = weekData.reduce((sum, o) => sum + ((o.delivery_earnings as number) || 0), 0);
 
     // This month
-    const monthStart = new Date(now); monthStart.setMonth(monthStart.getMonth() - 1);
-    const { data: monthData } = await supabase
-      .from('orders')
-      .select('delivery_earnings')
-      .eq('delivery_partner_id', userId)
-      .eq('status', 'delivered')
-      .gte('delivered_at', monthStart.toISOString());
-
-    const monthEarnings = monthData?.reduce((sum: number, o: Record<string, number>) => sum + (o.delivery_earnings || 0), 0) || 0;
+    const monthData = filterByDate(allDelivered, monthStart.toISOString());
+    const monthEarnings = monthData.reduce((sum, o) => sum + ((o.delivery_earnings as number) || 0), 0);
 
     // All-time earnings
-    const { data: allTimeData } = await supabase
-      .from('orders')
-      .select('delivery_earnings')
-      .eq('delivery_partner_id', userId)
-      .eq('status', 'delivered');
-
-    const allTimeEarnings = allTimeData?.reduce((sum: number, o: Record<string, number>) => sum + (o.delivery_earnings || 0), 0) || 0;
+    const allTimeEarnings = allDelivered.reduce((sum, o) => sum + ((o.delivery_earnings as number) || 0), 0);
 
     // Weekly chart data (last 7 days, grouped by day)
     const weeklyChart: { day: string; earnings: number; deliveries: number }[] = [];
@@ -98,22 +71,22 @@ export async function GET(request: NextRequest) {
       const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date(d); dayEnd.setHours(23, 59, 59, 999);
 
-      const dayOrders = (weekData || []).filter((o: Record<string, string>) => {
-        const dt = new Date(o.delivered_at);
+      const dayOrders = weekData.filter((o) => {
+        const dt = new Date(o.delivered_at as string);
         return dt >= dayStart && dt <= dayEnd;
       });
 
       weeklyChart.push({
         day: dayNames[d.getDay()],
-        earnings: dayOrders.reduce((sum: number, o: Record<string, number>) => sum + (o.delivery_earnings || 0), 0),
+        earnings: dayOrders.reduce((sum, o) => sum + ((o.delivery_earnings as number) || 0), 0),
         deliveries: dayOrders.length,
       });
     }
 
     // Recent earnings list
-    const recentEarnings = (earningsData || []).slice(0, 20).map((o: Record<string, unknown>) => ({
+    const recentEarnings = earningsData.slice(0, 20).map((o) => ({
       orderId: o.order_number,
-      amount: o.delivery_earnings || 0,
+      amount: (o.delivery_earnings as number) || 0,
       type: 'delivery',
       date: o.delivered_at,
       itemCount: Array.isArray(o.items) ? o.items.length : 0,
@@ -127,8 +100,8 @@ export async function GET(request: NextRequest) {
           weekEarnings,
           monthEarnings,
           allTimeEarnings,
-          todayDeliveries: todayData?.length || 0,
-          weekDeliveries: weekData?.length || 0,
+          todayDeliveries: todayData.length,
+          weekDeliveries: weekData.length,
           periodEarnings: totalEarnings,
           periodDeliveries: totalDeliveries,
         },

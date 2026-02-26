@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections, generateId } from '@/lib/firebase';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'orderwala-admin-secret-key-2024';
@@ -27,22 +27,46 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
 
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const snapshot = await db.collection(Collections.VENDORS)
+      .orderBy('created_at', 'desc')
+      .get();
 
-    let query = supabase
-      .from('vendors')
-      .select('id, store_name, slug, phone, email, category, description, logo, address, commission_rate, average_rating, total_ratings, total_orders, is_open, is_active, is_verified, delivery_radius, min_order_amount, delivery_fee, created_at')
-      .order('created_at', { ascending: false });
+    let vendors = snapshot.docs.map(doc => {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        store_name: d.store_name,
+        slug: d.slug,
+        phone: d.phone,
+        email: d.email,
+        category: d.category,
+        description: d.description,
+        logo: d.logo,
+        address: d.address,
+        commission_rate: d.commission_rate,
+        average_rating: d.average_rating,
+        total_ratings: d.total_ratings,
+        total_orders: d.total_orders,
+        is_open: d.is_open,
+        is_active: d.is_active,
+        is_verified: d.is_verified,
+        delivery_radius: d.delivery_radius,
+        min_order_amount: d.min_order_amount,
+        delivery_fee: d.delivery_fee,
+        created_at: d.created_at,
+      };
+    });
 
     if (search) {
-      query = query.or(`store_name.ilike.%${search}%,phone.ilike.%${search}%`);
+      const searchLower = search.toLowerCase();
+      vendors = vendors.filter(v =>
+        v.store_name?.toLowerCase().includes(searchLower) ||
+        v.phone?.toLowerCase().includes(searchLower)
+      );
     }
 
-    const { data: vendors, error } = await query;
-
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, data: vendors || [] });
+    return NextResponse.json({ success: true, data: vendors });
   } catch (error) {
     console.error('Error fetching vendors:', error);
     return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
@@ -57,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
 
     // Create slug from store_name
     const slug = (body.store_name || '')
@@ -65,7 +89,10 @@ export async function POST(request: NextRequest) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
 
-    const insertData: Record<string, unknown> = {
+    const id = generateId();
+    const now = new Date().toISOString();
+    const vendorData = {
+      id,
       owner_id: decoded.userId,
       store_name: body.store_name,
       slug,
@@ -82,17 +109,16 @@ export async function POST(request: NextRequest) {
       delivery_radius: body.delivery_radius || 5,
       min_order_amount: body.min_order_amount || 0,
       delivery_fee: body.delivery_fee || 0,
+      average_rating: 0,
+      total_ratings: 0,
+      total_orders: 0,
+      created_at: now,
+      updated_at: now,
     };
 
-    const { data, error } = await supabase
-      .from('vendors')
-      .insert(insertData)
-      .select()
-      .single();
+    await db.collection(Collections.VENDORS).doc(id).set(vendorData);
 
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    return NextResponse.json({ success: true, data: vendorData }, { status: 201 });
   } catch (error) {
     console.error('Error creating vendor:', error);
     return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });

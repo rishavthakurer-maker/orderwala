@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
-import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { getDb, Collections, generateId } from "@/lib/firebase";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -23,17 +23,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error("Email and password are required");
         }
 
-        const supabase = createAdminSupabaseClient();
+        const db = getDb();
+        const snapshot = await db.collection(Collections.USERS)
+          .where('email', '==', credentials.email).limit(1).get();
 
-        const { data: user, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', credentials.email)
-          .single();
-
-        if (error || !user) {
+        if (snapshot.empty) {
           throw new Error("No user found with this email");
         }
+
+        const userDoc = snapshot.docs[0];
+        const user = { id: userDoc.id, ...userDoc.data() } as any;
 
         if (!user.password_hash) {
           throw new Error("Please login with Google or request a password reset");
@@ -73,17 +72,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error("Phone number and user ID are required");
         }
 
-        const supabase = createAdminSupabaseClient();
+        const db = getDb();
+        const userDoc = await db.collection(Collections.USERS).doc(credentials.userId as string).get();
 
-        const { data: user, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', credentials.userId)
-          .single();
-
-        if (error || !user) {
+        if (!userDoc.exists) {
           throw new Error("User not found");
         }
+
+        const user = { id: userDoc.id, ...userDoc.data() } as any;
 
         if (!user.is_active) {
           throw new Error("Your account has been deactivated");
@@ -103,37 +99,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        const supabase = createAdminSupabaseClient();
+        const db = getDb();
+        const usersRef = db.collection(Collections.USERS);
+        const snapshot = await usersRef.where('email', '==', user.email).limit(1).get();
 
-        const { data: existingUser, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', user.email)
-          .single();
-
-        if (error || !existingUser) {
-          // Create new user for Google sign-in
-          const { data: newUser, error: createError } = await supabase
-            .from('users')
-            .insert({
+        if (snapshot.empty) {
+          const newId = generateId();
+          try {
+            await usersRef.doc(newId).set({
               name: user.name,
               email: user.email,
               image: user.image,
               is_verified: true,
               is_active: true,
               role: "customer",
-            })
-            .select()
-            .single();
-
-          if (createError) {
-            console.error('Error creating user:', createError);
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+            user.id = newId;
+            user.role = "customer";
+          } catch (err) {
+            console.error('Error creating user:', err);
             return false;
           }
-
-          user.id = newUser.id;
-          user.role = newUser.role;
         } else {
+          const existingUser = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as any;
           if (!existingUser.is_active) {
             return false;
           }

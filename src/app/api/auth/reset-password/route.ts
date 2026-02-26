@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, Collections } from '@/lib/firebase';
 import bcrypt from 'bcryptjs';
 
 // =============================================================================
@@ -58,33 +58,34 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const otpCol = db.collection(Collections.OTP_VERIFICATIONS);
+    const usersCol = db.collection(Collections.USERS);
 
     // Find the OTP record with reset token
-    const { data: otpRecord, error: otpError } = await supabase
-      .from('otp_verifications')
-      .select('*')
-      .eq('email', normalizedEmail)
-      .eq('reset_token', token)
-      .eq('type', 'password_reset')
-      .eq('is_verified', true)
-      .single();
+    const otpSnap = await otpCol
+      .where('email', '==', normalizedEmail)
+      .where('reset_token', '==', token)
+      .where('type', '==', 'password_reset')
+      .where('is_verified', '==', true)
+      .limit(1)
+      .get();
 
-    if (otpError || !otpRecord) {
+    if (otpSnap.empty) {
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.INVALID_TOKEN },
         { status: 400 }
       );
     }
 
+    const otpDoc = otpSnap.docs[0];
+    const otpRecord = otpDoc.data();
+
     // Check if token is expired
     const tokenExpiresAt = new Date(otpRecord.token_expires_at);
     if (tokenExpiresAt < new Date()) {
       // Delete expired record
-      await supabase
-        .from('otp_verifications')
-        .delete()
-        .eq('id', otpRecord.id);
+      await otpDoc.ref.delete();
 
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.TOKEN_EXPIRED },
@@ -93,32 +94,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the user
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', normalizedEmail)
-      .single();
+    const userSnap = await usersCol
+      .where('email', '==', normalizedEmail)
+      .limit(1)
+      .get();
 
-    if (userError || !user) {
+    if (userSnap.empty) {
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.USER_NOT_FOUND },
         { status: 404 }
       );
     }
 
+    const userDoc = userSnap.docs[0];
+
     // Hash the new password
     const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 
     // Update user's password
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({
+    try {
+      await userDoc.ref.update({
         password_hash: passwordHash,
         updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id);
-
-    if (updateError) {
+      });
+    } catch (updateError) {
       console.error('[ResetPassword] Error updating password:', updateError);
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.UPDATE_FAILED },
@@ -127,10 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Delete the used OTP record
-    await supabase
-      .from('otp_verifications')
-      .delete()
-      .eq('id', otpRecord.id);
+    await otpDoc.ref.delete();
 
     // Optionally: Invalidate all existing sessions for the user
     // This would require session management implementation

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { getDb, generateId, Collections } from '@/lib/firebase';
 
 // =============================================================================
 // Constants
@@ -95,16 +95,17 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const supabase = createAdminSupabaseClient();
+    const db = getDb();
+    const usersCol = db.collection(Collections.USERS);
+    const otpCol = db.collection(Collections.OTP_VERIFICATIONS);
 
     // Check if user exists
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, name, email')
-      .eq('email', normalizedEmail)
-      .single();
+    const userSnap = await usersCol
+      .where('email', '==', normalizedEmail)
+      .limit(1)
+      .get();
 
-    if (userError || !user) {
+    if (userSnap.empty) {
       // Don't reveal if email exists for security
       // But still return success to prevent email enumeration
       return NextResponse.json({
@@ -113,29 +114,36 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const user = { id: userSnap.docs[0].id, ...userSnap.docs[0].data() } as { id: string; name?: string; email: string };
+
     // Generate OTP
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
     // Delete any existing password reset OTPs for this email
-    await supabase
-      .from('otp_verifications')
-      .delete()
-      .eq('email', normalizedEmail)
-      .eq('type', 'password_reset');
+    const existingOtps = await otpCol
+      .where('email', '==', normalizedEmail)
+      .where('type', '==', 'password_reset')
+      .get();
+
+    if (!existingOtps.empty) {
+      const batch = db.batch();
+      existingOtps.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+    }
 
     // Save new OTP
-    const { error: insertError } = await supabase
-      .from('otp_verifications')
-      .insert({
+    const otpId = generateId();
+    try {
+      await otpCol.doc(otpId).set({
         email: normalizedEmail,
         otp,
         type: 'password_reset',
         expires_at: expiresAt.toISOString(),
         is_verified: false,
+        created_at: new Date().toISOString(),
       });
-
-    if (insertError) {
+    } catch (insertError) {
       console.error('[ForgotPassword] Error saving OTP:', insertError);
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.OTP_GENERATION_FAILED },
