@@ -180,6 +180,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  // Firebase Hosting CDN (Fastly) strips ALL cookies except "__session"
+  // before forwarding requests to Cloud Run. We must use "__session" as
+  // the session cookie name so the JWT token actually reaches the backend.
+  cookies: {
+    sessionToken: {
+      name: "__session",
+      options: {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        secure: true,
+      },
+    },
+  },
   trustHost: true,
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
 });
