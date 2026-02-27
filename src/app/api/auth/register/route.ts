@@ -42,6 +42,27 @@ export async function POST(request: NextRequest) {
     }
 
     if (existingUsers.length > 0) {
+      // If user exists as customer and wants to become vendor, upgrade role
+      if (role === 'vendor') {
+        const existingDoc = existingUsers[0];
+        const existingData = existingDoc.data() as Record<string, unknown>;
+        if (existingData.role === 'customer') {
+          await existingDoc.ref.update({ role: 'vendor', updated_at: new Date().toISOString() });
+          return NextResponse.json(
+            {
+              message: 'Account upgraded to seller successfully',
+              user: {
+                id: existingDoc.id,
+                name: existingData.name,
+                email: existingData.email,
+                phone: existingData.phone,
+                role: 'vendor',
+              },
+            },
+            { status: 200 }
+          );
+        }
+      }
       return NextResponse.json(
         { error: 'User with this email or phone already exists' },
         { status: 409 }

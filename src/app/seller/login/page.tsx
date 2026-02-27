@@ -24,6 +24,9 @@ export default function SellerLoginPage() {
 
     setIsLoading(true);
     try {
+      // Sign out any existing session first so fresh JWT is issued
+      await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {});
+
       const result = await signIn('credentials', {
         email,
         password,
@@ -31,17 +34,16 @@ export default function SellerLoginPage() {
       });
 
       if (result?.error) {
-        throw new Error(result.error);
+        throw new Error(result.error === 'CredentialsSignin' ? 'Invalid email or password' : result.error);
       }
 
-      // Verify user is a vendor
-      const sessionRes = await fetch('/api/auth/session');
+      // Verify user is a vendor - fetch fresh session
+      const sessionRes = await fetch('/api/auth/session', { cache: 'no-store' });
       const session = await sessionRes.json();
 
       if (session?.user?.role !== 'vendor') {
         toast.error('This login is for sellers only. Please use the buyer login.');
-        // Sign out since wrong role
-        await fetch('/api/auth/signout', { method: 'POST' });
+        await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {});
         return;
       }
 
