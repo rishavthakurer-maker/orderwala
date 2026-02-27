@@ -66,8 +66,9 @@ function LoginPageContent() {
         toast.error(errorMsg);
       } else if (result?.ok) {
         toast.success('Login successful!');
-        router.push(redirectTo);
-        router.refresh();
+        // Full page reload so SessionProvider fetches fresh session
+        window.location.href = redirectTo;
+        return;
       } else {
         toast.error('Login failed. Please try again.');
       }
@@ -134,8 +135,9 @@ function LoginPageContent() {
         toast.error(signInResult.error);
       } else {
         toast.success('Login successful!');
-        router.push(redirectTo);
-        router.refresh();
+        // Full page reload so SessionProvider fetches fresh session
+        window.location.href = redirectTo;
+        return;
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'An error occurred');
