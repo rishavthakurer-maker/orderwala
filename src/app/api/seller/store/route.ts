@@ -112,20 +112,20 @@ export async function PUT(request: NextRequest) {
     const vendorId = vendorSnap.docs[0].id;
 
     const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (body.storeName) updateData.store_name = body.storeName;
+    if (body.storeName !== undefined) updateData.store_name = body.storeName;
     if (body.description !== undefined) updateData.description = body.description;
-    if (body.phone) updateData.phone = body.phone;
-    if (body.email) updateData.email = body.email;
-    if (body.category) updateData.category = body.category;
-    if (body.address) updateData.address = body.address;
-    if (body.logo) updateData.logo = body.logo;
-    if (body.coverImage) updateData.cover_image = body.coverImage;
+    if (body.phone !== undefined) updateData.phone = body.phone;
+    if (body.email !== undefined) updateData.email = body.email;
+    if (body.category !== undefined) updateData.category = body.category;
+    if (body.address !== undefined) updateData.address = body.address;
+    if (body.logo !== undefined) updateData.logo = body.logo;
+    if (body.coverImage !== undefined) updateData.cover_image = body.coverImage;
     if (body.isOpen !== undefined) updateData.is_open = body.isOpen;
-    if (body.deliveryRadius) updateData.delivery_radius = body.deliveryRadius;
+    if (body.deliveryRadius !== undefined) updateData.delivery_radius = body.deliveryRadius;
     if (body.minOrderAmount !== undefined) updateData.min_order_amount = body.minOrderAmount;
     if (body.deliveryFee !== undefined) updateData.delivery_fee = body.deliveryFee;
-    if (body.openingHours) updateData.opening_hours = body.openingHours;
-    if (body.bankDetails) updateData.bank_details = body.bankDetails;
+    if (body.openingHours !== undefined) updateData.opening_hours = body.openingHours;
+    if (body.bankDetails !== undefined) updateData.bank_details = body.bankDetails;
 
     await db.collection(Collections.VENDORS).doc(vendorId).update(updateData);
 

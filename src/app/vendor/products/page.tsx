@@ -1,7 +1,7 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Package, X, ImagePlus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Search, Edit2, Trash2, Package, X, ImagePlus, Upload, Loader2 } from 'lucide-react';
 import { Card, CardContent, Button, Badge, Input, Modal, Skeleton } from '@/components/ui';
 import { formatPrice } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -50,6 +50,8 @@ export default function VendorProductsPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -69,7 +71,15 @@ export default function VendorProductsPage() {
     try {
       const res = await fetch('/api/categories?isActive=true');
       const data = await res.json();
-      if (data.success) setCategories(data.data);
+      if (data.success) {
+        // Categories API returns _id, normalize to id
+        const normalized = data.data.map((c: Record<string, unknown>) => ({
+          id: c.id || c._id,
+          name: c.name,
+          slug: c.slug,
+        }));
+        setCategories(normalized);
+      }
     } catch { console.error('Failed to fetch categories'); }
   };
 
@@ -104,6 +114,54 @@ export default function VendorProductsPage() {
 
   const removeImage = (index: number) => {
     setForm({ ...form, images: form.images.filter((_, i) => i !== index) });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} is too large. Max 5MB per image.`);
+          continue;
+        }
+        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+          toast.error(`${file.name} is not a supported image format.`);
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', 'products');
+
+        const res = await fetch('/api/seller/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          uploadedUrls.push(data.data.url);
+        } else {
+          toast.error(data.error || `Failed to upload ${file.name}`);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        setForm(prev => ({ ...prev, images: [...prev.images, ...uploadedUrls] }));
+        toast.success(`${uploadedUrls.length} image${uploadedUrls.length > 1 ? 's' : ''} uploaded!`);
+      }
+    } catch {
+      toast.error('Failed to upload images');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleSave = async () => {
@@ -325,17 +383,54 @@ export default function VendorProductsPage() {
             </label>
           </div>
 
-          {/* Images */}
+          {/* Images - Upload from device + URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Images (URL)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
+            
+            {/* Upload from device */}
+            <div className="mb-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                id="product-image-upload"
+                title="Upload product images"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {uploading ? (
+                  <div className="flex items-center justify-center gap-2 text-orange-600">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span className="text-sm font-medium">Uploading...</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-1">
+                    <Upload className="h-6 w-6 text-gray-400" />
+                    <span className="text-sm text-gray-600 font-medium">Click to upload images</span>
+                    <span className="text-xs text-gray-400">JPG, PNG, WebP, GIF (Max 5MB each)</span>
+                  </div>
+                )}
+              </button>
+            </div>
+
+            {/* Or paste URL */}
             <div className="flex gap-2">
-              <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="Paste image URL" className="flex-1" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addImage(); } }} />
+              <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="Or paste image URL" className="flex-1" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addImage(); } }} />
               <Button type="button" variant="outline" onClick={addImage}><ImagePlus className="h-4 w-4" /></Button>
             </div>
+
+            {/* Image previews */}
             {form.images.length > 0 && (
-              <div className="flex gap-2 mt-2 flex-wrap">
+              <div className="flex gap-2 mt-3 flex-wrap">
                 {form.images.map((img, i) => (
-                  <div key={i} className="relative h-16 w-16 rounded-lg overflow-hidden border group">
+                  <div key={i} className="relative h-20 w-20 rounded-lg overflow-hidden border group">
                     <img src={img} alt="" className="h-full w-full object-cover" />
                     <button type="button" title="Remove image" onClick={() => removeImage(i)} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <X className="h-4 w-4 text-white" />
@@ -348,7 +443,7 @@ export default function VendorProductsPage() {
 
           <div className="flex gap-3 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => setShowModal(false)}>Cancel</Button>
-            <Button className="flex-1 bg-orange-600 hover:bg-orange-700" onClick={handleSave} disabled={saving}>
+            <Button className="flex-1 bg-orange-600 hover:bg-orange-700" onClick={handleSave} disabled={saving || uploading}>
               {saving ? 'Saving...' : editingId ? 'Update Product' : 'Add Product'}
             </Button>
           </div>

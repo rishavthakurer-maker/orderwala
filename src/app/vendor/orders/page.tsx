@@ -80,7 +80,7 @@ export default function VendorOrdersPage() {
       
       setOrders(orders.map((o) => o.id === orderId ? { ...o, status: newStatus } : o));
       if (selectedOrder?.id === orderId) setSelectedOrder({ ...selectedOrder, status: newStatus });
-      toast.success(`Order ${newStatus.replace('_', ' ')}!`);
+      toast.success(`Order ${newStatus.replace(/_/g, ' ')}!`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to update');
     } finally {
@@ -162,7 +162,7 @@ export default function VendorOrdersPage() {
                       <div className="flex items-center gap-3 mb-2">
                         <p className="font-semibold">#{typeof order.orderId === 'string' ? order.orderId.slice(-8) : order.orderId}</p>
                         <Badge variant={(statusColor[order.status] || 'default') as 'success' | 'warning' | 'danger' | 'info' | 'default'} className="capitalize text-xs">
-                          {order.status.replace('_', ' ')}
+                          {order.status.replace(/_/g, ' ')}
                         </Badge>
                         <span className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
@@ -170,7 +170,7 @@ export default function VendorOrdersPage() {
                         <span>{order.customer?.name || 'Customer'}</span>
                         <span>{Array.isArray(order.items) ? order.items.length : 0} items</span>
                         <span className="font-medium text-gray-900">{formatPrice(order.total)}</span>
-                        <span className="capitalize">{order.paymentMethod?.replace('_', ' ') || 'COD'}</span>
+                        <span className="capitalize">{order.paymentMethod?.replace(/_/g, ' ') || 'COD'}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -205,7 +205,7 @@ export default function VendorOrdersPage() {
           <div className="space-y-4 max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <Badge variant={(statusColor[selectedOrder.status] || 'default') as 'success' | 'warning' | 'danger' | 'info' | 'default'} className="capitalize">
-                {selectedOrder.status.replace('_', ' ')}
+                {selectedOrder.status.replace(/_/g, ' ')}
               </Badge>
               <span className="text-sm text-gray-500">{new Date(selectedOrder.createdAt).toLocaleString('en-IN')}</span>
             </div>
@@ -246,7 +246,7 @@ export default function VendorOrdersPage() {
                 {selectedOrder.discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-{formatPrice(selectedOrder.discount)}</span></div>}
                 <hr className="my-2" />
                 <div className="flex justify-between font-bold text-base"><span>Total</span><span>{formatPrice(selectedOrder.total)}</span></div>
-                <p className="text-xs text-gray-500 capitalize">Payment: {selectedOrder.paymentMethod?.replace('_', ' ') || 'COD'}</p>
+                <p className="text-xs text-gray-500 capitalize">Payment: {selectedOrder.paymentMethod?.replace(/_/g, ' ') || 'COD'}</p>
               </div>
             </Card>
 

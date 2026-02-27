@@ -1,7 +1,7 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
-import { Store, Save, Phone, Mail, MapPin } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Store, Save, Phone, Mail, MapPin, Upload, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Input, Skeleton } from '@/components/ui';
 import toast from 'react-hot-toast';
 
@@ -42,6 +42,8 @@ export default function VendorSettingsPage() {
   const [accountNumber, setAccountNumber] = useState('');
   const [ifsc, setIfsc] = useState('');
   const [bankName, setBankName] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchStore();
@@ -74,6 +76,32 @@ export default function VendorSettingsPage() {
       }
     } catch { console.error('Failed to fetch store'); }
     finally { setLoading(false); }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image too large. Max 5MB.'); return; }
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) { toast.error('Invalid file type.'); return; }
+
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'logos');
+      const res = await fetch('/api/seller/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        setLogo(data.data.url);
+        toast.success('Logo uploaded!');
+      } else {
+        toast.error(data.error || 'Failed to upload logo');
+      }
+    } catch { toast.error('Failed to upload logo'); }
+    finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
   };
 
   const handleSave = async () => {
@@ -166,8 +194,23 @@ export default function VendorSettingsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Logo URL</label>
-              <Input value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="https://..." />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Store Logo</label>
+              <div className="flex items-center gap-3">
+                <div className="h-14 w-14 rounded-lg border overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                  {logo ? (
+                    <img src={logo} alt="Logo" className="h-full w-full object-cover" />
+                  ) : (
+                    <Store className="h-6 w-6 text-gray-300" />
+                  )}
+                </div>
+                <div className="flex-1 space-y-1">
+                  <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleLogoUpload} className="hidden" id="logo-upload" title="Upload store logo" />
+                  <button type="button" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} className="text-sm text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1">
+                    {uploadingLogo ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading...</> : <><Upload className="h-3.5 w-3.5" /> Upload image</>}
+                  </button>
+                  <Input value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="Or paste URL" className="text-xs h-8" />
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -247,7 +290,7 @@ export default function VendorSettingsPage() {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} className="bg-orange-600 hover:bg-orange-700">
+        <Button onClick={handleSave} disabled={saving || uploadingLogo} className="bg-orange-600 hover:bg-orange-700">
           <Save className="h-4 w-4 mr-2" />
           {saving ? 'Saving...' : 'Save Settings'}
         </Button>

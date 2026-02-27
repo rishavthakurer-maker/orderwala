@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       const cat = doc.data();
       return {
         _id: doc.id,
+        id: doc.id,
         name: cat.name,
         slug: cat.slug,
         description: cat.description,

@@ -119,7 +119,7 @@ export default function VendorDashboard() {
                     <div className="text-right">
                       <p className="font-medium text-sm">{formatPrice(order.total as number)}</p>
                       <Badge variant={(statusColor[order.status] || 'default') as 'success' | 'warning' | 'danger' | 'info' | 'default'} className="text-xs capitalize">
-                        {order.status.replace('_', ' ')}
+                        {order.status.replace(/_/g, ' ')}
                       </Badge>
                     </div>
                   </div>

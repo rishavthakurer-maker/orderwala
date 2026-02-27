@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { TrendingUp, ShoppingCart, DollarSign, Package } from 'lucide-react';
+import { TrendingUp, ShoppingCart, IndianRupee, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Skeleton, DynamicBar } from '@/components/ui';
 
 interface AnalyticsData {
@@ -69,7 +69,7 @@ export default function VendorAnalyticsPage() {
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-green-100 rounded-lg"><DollarSign className="h-5 w-5 text-green-600" /></div>
+              <div className="p-2.5 bg-green-100 rounded-lg"><IndianRupee className="h-5 w-5 text-green-600" /></div>
               <div>
                 <p className="text-sm text-gray-500">Total Revenue</p>
                 <p className="text-xl font-bold text-gray-900">₹{data.summary.totalRevenue.toLocaleString()}</p>
