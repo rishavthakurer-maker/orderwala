@@ -1,0 +1,47 @@
+HTTP/1.1 302 Found
+Connection: keep-alive
+Content-Length: 0
+Cache-Control: private
+Content-Type: text/html
+Location: https://orderwala.in/login?error=MissingCSRF
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Google Frontend
+Strict-Transport-Security: max-age=31556926
+X-Cloud-Trace-Context: c51d3f46896c569578a3562cf55fcf7c;o=1
+X-Content-Type-Options: nosniff
+X-Country-Code: IN
+X-Frame-Options: SAMEORIGIN
+X-Xss-Protection: 1; mode=block
+Accept-Ranges: bytes
+Date: Fri, 27 Feb 2026 07:35:05 GMT
+X-Served-By: cache-del-vibw2260034-DEL
+X-Cache: MISS
+X-Cache-Hits: 0
+X-Timer: S1772177705.366425,VS0,VE565
+Vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch,cookie,need-authorization, x-fh-requested-host, accept-encoding
+alt-svc: h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400
+
+HTTP/1.1 200 OK
+Connection: keep-alive
+Cache-Control: max-age=3600
+Content-Type: text/html; charset=utf-8
+Etag: "053d31ccfa194213e335f184fe14e17887cd8e3ed8ca77026356567301175ef8"
+Last-Modified: Fri, 27 Feb 2026 07:29:14 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Strict-Transport-Security: max-age=31556926
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-Next-Cache-Tags: _N_T_/layout,_N_T_/login/layout,_N_T_/login/page,_N_T_/login
+X-Nextjs-Prerender: 1
+X-Nextjs-Stale-Time: 300
+X-Xss-Protection: 1; mode=block
+Accept-Ranges: bytes
+Date: Fri, 27 Feb 2026 07:35:06 GMT
+X-Served-By: cache-del-vibw2260034-DEL
+X-Cache: MISS
+X-Cache-Hits: 0
+X-Timer: S1772177706.939844,VS0,VE234
+Vary: x-fh-requested-host, accept-encoding
+alt-svc: h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400
+transfer-encoding: chunked
+

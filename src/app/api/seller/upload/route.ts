@@ -61,8 +61,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Make file publicly accessible
-    await bucketFile.makePublic();
+    // Bucket has uniform bucket-level access with allUsers objectViewer, no per-file makePublic needed
 
     // Build public URL
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;

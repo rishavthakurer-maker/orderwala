@@ -12,12 +12,12 @@ function getApp(): App {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
       app = initializeApp({
         credential: cert(serviceAccount),
-        storageBucket: `${process.env.FIREBASE_PROJECT_ID || 'orderwala-8ac2b'}.firebasestorage.app`,
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'orderwala-uploads',
       });
     } else {
       app = initializeApp({
         projectId: process.env.FIREBASE_PROJECT_ID || 'orderwala-8ac2b',
-        storageBucket: `${process.env.FIREBASE_PROJECT_ID || 'orderwala-8ac2b'}.firebasestorage.app`,
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'orderwala-uploads',
       });
     }
   }
