@@ -38,8 +38,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/:path*',
+        // Prevent CDN/browser from caching HTML pages (JS bundles have content hashes)
+        source: '/((?!_next/static|_next/image|favicon.ico).*)',
         headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
