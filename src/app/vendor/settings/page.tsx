@@ -1,8 +1,10 @@
 ﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Store, Save, Phone, Mail, MapPin, Upload, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, Button, Input, Skeleton } from '@/components/ui';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { Store, Save, Phone, Mail, MapPin, Upload, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, Button, Input, Skeleton, Modal } from '@/components/ui';
 import toast from 'react-hot-toast';
 
 interface StoreData {
@@ -43,7 +45,11 @@ export default function VendorSettingsPage() {
   const [ifsc, setIfsc] = useState('');
   const [bankName, setBankName] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetchStore();
@@ -295,6 +301,93 @@ export default function VendorSettingsPage() {
           {saving ? 'Saving...' : 'Save Settings'}
         </Button>
       </div>
+
+      {/* Danger Zone - Delete Account */}
+      <Card className="border-red-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-600">
+            <AlertTriangle className="h-5 w-5" /> Danger Zone
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="font-medium text-gray-900">Delete Seller Account</p>
+              <p className="text-sm text-gray-500">Permanently delete your store, all products, and your account. This action cannot be undone.</p>
+            </div>
+            <Button
+              variant="outline"
+              className="text-red-600 border-red-300 hover:bg-red-50 shrink-0"
+              onClick={() => setShowDeleteModal(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Account
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={showDeleteModal} onClose={() => { setShowDeleteModal(false); setDeleteConfirm(''); }} title="Delete Seller Account">
+        <div className="space-y-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+              <div className="text-sm text-red-800">
+                <p className="font-medium mb-1">This will permanently delete:</p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  <li>Your store &quot;{store?.store_name}&quot;</li>
+                  <li>All your products</li>
+                  <li>Your seller account</li>
+                </ul>
+                <p className="mt-2 font-medium">This action cannot be undone.</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Type <span className="font-bold text-red-600">DELETE</span> to confirm
+            </label>
+            <Input
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="Type DELETE"
+              className="border-red-300 focus:border-red-500"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => { setShowDeleteModal(false); setDeleteConfirm(''); }}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              disabled={deleteConfirm !== 'DELETE' || deleting}
+              onClick={async () => {
+                setDeleting(true);
+                try {
+                  const res = await fetch('/api/seller/store', { method: 'DELETE' });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error || 'Failed to delete');
+                  toast.success('Account deleted successfully');
+                  await signOut({ callbackUrl: '/' });
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : 'Failed to delete account');
+                  setDeleting(false);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {deleting ? 'Deleting...' : 'Delete Account'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -138,3 +138,65 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Failed to update store' }, { status: 500 });
   }
 }
+
+// DELETE /api/seller/store - Delete seller account (store + products + user)
+export async function DELETE() {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'vendor') {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const db = getDb();
+    const batch = db.batch();
+
+    // Find the vendor store
+    const vendorSnap = await db.collection(Collections.VENDORS)
+      .where('owner_id', '==', session.user.id)
+      .limit(1)
+      .get();
+
+    if (!vendorSnap.empty) {
+      const vendorId = vendorSnap.docs[0].id;
+
+      // Delete all products belonging to this vendor
+      const productsSnap = await db.collection(Collections.PRODUCTS)
+        .where('vendor_id', '==', vendorId)
+        .get();
+
+      for (const doc of productsSnap.docs) {
+        batch.delete(doc.ref);
+      }
+
+      // Delete the vendor store
+      batch.delete(vendorSnap.docs[0].ref);
+    }
+
+    // Delete the user account
+    const userDoc = db.collection(Collections.USERS).doc(session.user.id);
+    batch.delete(userDoc);
+
+    // Delete user's addresses
+    const addressSnap = await db.collection(Collections.ADDRESSES)
+      .where('user_id', '==', session.user.id)
+      .get();
+    for (const doc of addressSnap.docs) {
+      batch.delete(doc.ref);
+    }
+
+    // Delete user's favorites
+    const favSnap = await db.collection(Collections.FAVORITES)
+      .where('user_id', '==', session.user.id)
+      .get();
+    for (const doc of favSnap.docs) {
+      batch.delete(doc.ref);
+    }
+
+    await batch.commit();
+
+    return NextResponse.json({ success: true, message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    return NextResponse.json({ success: false, error: 'Failed to delete account' }, { status: 500 });
+  }
+}
