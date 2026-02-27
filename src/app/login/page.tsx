@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, Phone, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Phone, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button, Input, Card } from '@/components/ui';
 
 const emailSchema = z.object({
@@ -28,8 +28,10 @@ type EmailFormData = z.infer<typeof emailSchema>;
 type PhoneFormData = z.infer<typeof phoneSchema>;
 type OTPFormData = z.infer<typeof otpSchema>;
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('phone');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +66,7 @@ export default function LoginPage() {
         toast.error(errorMsg);
       } else if (result?.ok) {
         toast.success('Login successful!');
-        router.push('/');
+        router.push(redirectTo);
         router.refresh();
       } else {
         toast.error('Login failed. Please try again.');
@@ -132,7 +134,7 @@ export default function LoginPage() {
         toast.error(signInResult.error);
       } else {
         toast.success('Login successful!');
-        router.push('/');
+        router.push(redirectTo);
         router.refresh();
       }
     } catch (error) {
@@ -143,7 +145,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    signIn('google', { callbackUrl: '/' });
+    signIn('google', { callbackUrl: redirectTo });
   };
 
   return (
@@ -359,5 +361,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }

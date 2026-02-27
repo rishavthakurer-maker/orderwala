@@ -43,7 +43,7 @@ const paymentMethods = [
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { items, getTotal, clearCart } = useCartStore();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
@@ -62,12 +62,13 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (!session?.user) {
+    if (status === 'loading') return;
+    if (status === 'unauthenticated') {
       router.push('/login?redirect=/checkout');
       return;
     }
     fetchAddresses();
-  }, [session, router]);
+  }, [status, session, router]);
 
   const fetchAddresses = async () => {
     try {
@@ -174,6 +175,14 @@ export default function CheckoutPage() {
       setIsProcessing(false);
     }
   };
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

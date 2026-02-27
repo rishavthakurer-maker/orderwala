@@ -30,12 +30,59 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
   const { getItemCount } = useCartStore();
-  const { selectedAddress, currentLocation } = useLocationStore();
+  const { selectedAddress, currentLocation, setCurrentLocation, setSelectedAddress } = useLocationStore();
 
   // Prevent hydration mismatch by only rendering dynamic content after mount
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Auto-detect location on first visit (like Blinkit)
+  useEffect(() => {
+    if (!mounted) return;
+    if (selectedAddress || currentLocation) return; // already have location
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        try {
+          // Use free OpenStreetMap Nominatim reverse geocoding
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await res.json();
+          if (data?.display_name) {
+            const addr = data.address || {};
+            const loc = {
+              lat,
+              lng,
+              address: data.display_name,
+              city: addr.city || addr.town || addr.village || addr.county || '',
+              state: addr.state || '',
+              pincode: addr.postcode || '',
+            };
+            setCurrentLocation(loc);
+            setSelectedAddress(loc);
+          } else {
+            const loc = { lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` };
+            setCurrentLocation(loc);
+            setSelectedAddress(loc);
+          }
+        } catch {
+          const loc = { lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` };
+          setCurrentLocation(loc);
+          setSelectedAddress(loc);
+        }
+      },
+      () => {
+        // User denied location - silently ignore, they can pick manually
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }, [mounted, selectedAddress, currentLocation, setCurrentLocation, setSelectedAddress]);
 
   const cartCount = mounted ? getItemCount() : 0;
   const location = mounted ? (selectedAddress || currentLocation) : null;
