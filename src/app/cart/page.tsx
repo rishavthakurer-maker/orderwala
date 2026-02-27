@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 
 export default function CartPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const { items, updateQuantity, removeItem, clearCart, getTotal } = useCartStore();
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
@@ -60,11 +60,6 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
-    if (status === 'unauthenticated') {
-      toast.error('Please login to continue');
-      router.push('/login?redirect=/checkout');
-      return;
-    }
     router.push('/checkout');
   };
 

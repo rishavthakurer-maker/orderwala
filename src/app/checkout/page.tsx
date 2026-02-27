@@ -63,12 +63,10 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (status === 'loading') return;
-    if (status === 'unauthenticated') {
-      router.push('/login?redirect=/checkout');
-      return;
+    if (status === 'authenticated') {
+      fetchAddresses();
     }
-    fetchAddresses();
-  }, [status, session, router]);
+  }, [status]);
 
   const fetchAddresses = async () => {
     try {
@@ -133,6 +131,11 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    if (status !== 'authenticated') {
+      toast.error('Please login to place your order');
+      window.location.href = '/login?redirect=/checkout';
+      return;
+    }
     if (!selectedAddress) { toast.error('Please select a delivery address'); return; }
     if (items.length === 0) { toast.error('Cart is empty'); return; }
 
@@ -176,14 +179,6 @@ export default function CheckoutPage() {
     }
   };
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
-      </div>
-    );
-  }
-
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -211,6 +206,13 @@ export default function CheckoutPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Login prompt for unauthenticated users */}
+        {status !== 'authenticated' && status !== 'loading' && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
+            <p className="text-sm text-yellow-800">Please login to place your order and save delivery addresses.</p>
+            <Button size="sm" onClick={() => { window.location.href = '/login?redirect=/checkout'; }}>Login</Button>
+          </div>
+        )}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* Delivery Address */}
