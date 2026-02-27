@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,6 +32,7 @@ function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
+  const { data: session, status } = useSession();
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('phone');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +50,13 @@ function LoginPageContent() {
   const otpForm = useForm<OTPFormData>({
     resolver: zodResolver(otpSchema),
   });
+
+  // If user is already authenticated, redirect them away from login
+  useEffect(() => {
+    if (status === 'authenticated') {
+      window.location.href = redirectTo;
+    }
+  }, [status, redirectTo]);
 
   const handleEmailLogin = async (data: EmailFormData) => {
     setIsLoading(true);

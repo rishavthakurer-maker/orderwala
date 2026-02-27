@@ -60,7 +60,8 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
-    router.push('/checkout');
+    // Full page navigation to ensure fresh code (not old cached JS)
+    window.location.href = '/checkout';
   };
 
   if (items.length === 0) {
