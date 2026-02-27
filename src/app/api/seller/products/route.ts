@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
       stock: stock ? parseInt(stock) : 0,
       is_veg: isVeg !== undefined ? isVeg : true,
       is_available: true,
+      is_active: true,
       is_featured: false,
       tags: tags || [],
       created_at: now,

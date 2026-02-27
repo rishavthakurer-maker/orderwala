@@ -74,8 +74,12 @@ export async function POST(request: NextRequest) {
       category: category || 'general',
       address: address || { street: '', city: '', state: '', pincode: '' },
       is_active: true,
-      is_verified: false,
+      is_verified: true,
       is_open: true,
+      average_rating: 0,
+      total_ratings: 0,
+      total_orders: 0,
+      delivery_time: '25-35 min',
       created_at: now,
       updated_at: now,
     };
