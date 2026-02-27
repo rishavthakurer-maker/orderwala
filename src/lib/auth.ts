@@ -140,6 +140,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.phone = user.phone;
       }
 
+      // Always refresh role from Firestore to catch role changes
+      if (token.id && typeof token.id === 'string') {
+        try {
+          const db = getDb();
+          const userDoc = await db.collection(Collections.USERS).doc(token.id).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            token.role = userData?.role || token.role;
+            token.phone = userData?.phone || token.phone;
+          }
+        } catch {
+          // Keep existing token values if Firestore fails
+        }
+      }
+
       // Handle session update
       if (trigger === "update" && session) {
         token.name = session.name;
