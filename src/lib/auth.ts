@@ -9,7 +9,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      checks: ["state"],
+      // Firebase Hosting CDN (Fastly) strips ALL cookies except "__session".
+      // OAuth state/PKCE cookies get stripped on the callback, causing InvalidCheck errors.
+      // Disable checks since we cannot preserve OAuth cookies through the CDN.
+      checks: ["none"],
     }),
     CredentialsProvider({
       id: "credentials",

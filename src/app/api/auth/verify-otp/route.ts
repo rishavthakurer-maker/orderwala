@@ -16,12 +16,12 @@ export async function POST(request: NextRequest) {
     const otpCol = db.collection(Collections.OTP_VERIFICATIONS);
     const usersCol = db.collection(Collections.USERS);
 
-    // Find the OTP record
+    // Find the OTP record - query by phone+otp, validate expiry in code
+    // (avoids complex composite index requirements for inequality + equality)
     const otpSnap = await otpCol
       .where('phone', '==', phone)
       .where('otp', '==', otp)
       .where('is_verified', '==', false)
-      .where('expires_at', '>', new Date().toISOString())
       .limit(1)
       .get();
 
@@ -33,6 +33,15 @@ export async function POST(request: NextRequest) {
     }
 
     const otpDoc = otpSnap.docs[0];
+    const otpData = otpDoc.data();
+
+    // Check expiry in code (more reliable than Firestore string comparison)
+    if (otpData.expires_at && new Date(otpData.expires_at) < new Date()) {
+      return NextResponse.json(
+        { error: 'OTP has expired. Please request a new one.' },
+        { status: 400 }
+      );
+    }
 
     // Mark OTP as verified
     await otpDoc.ref.update({ is_verified: true });
