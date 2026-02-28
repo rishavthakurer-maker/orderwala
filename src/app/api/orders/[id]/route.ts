@@ -310,20 +310,36 @@ export async function DELETE(
     const userId = session.user.id;
     const userRole = session.user.role;
 
-    // Verify the user is associated with this order
-    const roleFieldMap: Record<string, string> = {
-      customer: 'customer_id',
-      vendor: 'vendor_id',
-      delivery: 'delivery_partner_id',
-    };
-    const fieldToCheck = roleFieldMap[userRole || ''];
-    if (!fieldToCheck || order[fieldToCheck] !== userId) {
-      return NextResponse.json({ success: false, error: 'Unauthorized to delete this order' }, { status: 403 });
+    // Admin can delete any order
+    const isAdmin = userRole === 'admin';
+
+    // Determine which role this user has on the order
+    let effectiveRole = userRole;
+    if (!isAdmin) {
+      const roleFieldMap: Record<string, string> = {
+        customer: 'customer_id',
+        vendor: 'vendor_id',
+        delivery: 'delivery_partner_id',
+      };
+      const fieldToCheck = roleFieldMap[userRole || ''];
+      if (!fieldToCheck || order[fieldToCheck] !== userId) {
+        return NextResponse.json({ success: false, error: 'Unauthorized to delete this order' }, { status: 403 });
+      }
+    } else {
+      // Admin deleting — figure out their relationship to the order, or mark as admin
+      if (order.customer_id === userId) effectiveRole = 'customer';
+      else if (order.vendor_id === userId) effectiveRole = 'vendor';
+      else if (order.delivery_partner_id === userId) effectiveRole = 'delivery';
+      else effectiveRole = 'admin';
     }
 
     // Soft-delete: mark this role's view as deleted
     const deletedBy = order.deleted_by || {};
-    deletedBy[userRole as string] = true;
+    deletedBy[effectiveRole as string] = true;
+    // If admin deletes, also hide from customer view
+    if (effectiveRole === 'admin') {
+      deletedBy['customer'] = true;
+    }
 
     await db.collection(Collections.ORDERS).doc(order.id).update({
       deleted_by: deletedBy,
