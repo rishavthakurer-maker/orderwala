@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Package, Search, Star, TrendingUp, Clock, MapPin } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, Badge, Input, Modal, Skeleton } from '@/components/ui';
+import { Package, Search, Star, TrendingUp, Clock, MapPin, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, Badge, Input, Modal, Skeleton, Button } from '@/components/ui';
 import { formatPrice, formatDate, formatDateTime } from '@/lib/utils';
+import toast from 'react-hot-toast';
 
 interface HistoryOrder {
   _id: string;
@@ -44,6 +45,24 @@ export default function DeliveryHistoryPage() {
       setIsLoading(false);
     }
   }, [page]);
+
+  const handleDeleteOrder = async (orderId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!confirm('Remove this order from your history? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Order removed from history');
+        setOrders(prev => prev.filter(o => o.orderId !== orderId));
+        if (selectedOrder?.orderId === orderId) setShowOrderDetail(false);
+      } else {
+        toast.error(data.error || 'Failed to delete order');
+      }
+    } catch {
+      toast.error('Failed to delete order');
+    }
+  };
 
   useEffect(() => {
     fetchHistory();
@@ -152,6 +171,13 @@ export default function DeliveryHistoryPage() {
                   <p className="text-sm text-gray-500">{order.deliveredAt ? formatDateTime(new Date(order.deliveredAt)) : formatDate(new Date(order.createdAt))}</p>
                   <p className="text-lg font-bold text-green-600 mt-1">{formatPrice(order.deliveryEarnings)}</p>
                   <p className="text-sm text-gray-500">{order.items.length} items</p>
+                  <button
+                    onClick={(e) => handleDeleteOrder(order.orderId, e)}
+                    className="mt-2 text-xs text-red-500 hover:text-red-700 flex items-center gap-1 ml-auto"
+                    title="Remove from history"
+                  >
+                    <Trash2 className="h-3 w-3" /> Remove
+                  </button>
                 </div>
               </div>
             </CardContent>
@@ -227,6 +253,13 @@ export default function DeliveryHistoryPage() {
             </div>
 
             <button onClick={() => setShowOrderDetail(false)} className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Close</button>
+            <Button
+              variant="outline"
+              className="w-full text-red-600 border-red-200 hover:bg-red-50"
+              onClick={() => handleDeleteOrder(selectedOrder.orderId)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Remove from History
+            </Button>
           </div>
         )}
       </Modal>

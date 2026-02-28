@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Clock, CheckCircle2, XCircle, Truck, Search, ChevronDown, MapPin, Phone } from 'lucide-react';
+import { ShoppingBag, Clock, CheckCircle2, XCircle, Truck, Search, ChevronDown, MapPin, Phone, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Input, Modal, Skeleton } from '@/components/ui';
 import { formatPrice } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -91,6 +91,24 @@ export default function VendorOrdersPage() {
   const cancelOrder = async (orderId: string) => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
     await updateStatus(orderId, 'cancelled');
+  };
+
+  const handleDeleteOrder = async (orderId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!confirm('Remove this order from your history? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Order removed from history');
+        setOrders(prev => prev.filter(o => o.orderId !== orderId));
+        if (selectedOrder?.orderId === orderId) setSelectedOrder(null);
+      } else {
+        toast.error(data.error || 'Failed to delete order');
+      }
+    } catch {
+      toast.error('Failed to delete order');
+    }
   };
 
   const filtered = orders.filter((o) => {
@@ -190,6 +208,15 @@ export default function VendorOrdersPage() {
                           Cancel
                         </Button>
                       )}
+                      {['delivered', 'cancelled'].includes(order.status) && (
+                        <button
+                          onClick={(e) => handleDeleteOrder(order.orderId, e)}
+                          className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 px-2 py-1"
+                          title="Remove from history"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -282,6 +309,17 @@ export default function VendorOrdersPage() {
                   </Button>
                 )}
               </div>
+            )}
+
+            {/* Delete from history (delivered/cancelled only) */}
+            {['delivered', 'cancelled'].includes(selectedOrder.status) && (
+              <Button
+                variant="outline"
+                className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                onClick={() => handleDeleteOrder(selectedOrder.orderId)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Remove from History
+              </Button>
             )}
           </div>
         )}

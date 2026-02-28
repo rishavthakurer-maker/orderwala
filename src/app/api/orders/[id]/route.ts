@@ -278,3 +278,61 @@ export async function PUT(
     );
   }
 }
+
+// DELETE /api/orders/[id] - Soft-delete order from user's history
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const db = getDb();
+    const order = await findOrder(db, id);
+
+    if (!order) {
+      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+    }
+
+    // Only allow deleting delivered or cancelled orders
+    if (!['delivered', 'cancelled'].includes(order.status)) {
+      return NextResponse.json(
+        { success: false, error: 'Only delivered or cancelled orders can be deleted from history' },
+        { status: 400 }
+      );
+    }
+
+    const userId = session.user.id;
+    const userRole = session.user.role;
+
+    // Verify the user is associated with this order
+    const roleFieldMap: Record<string, string> = {
+      customer: 'customer_id',
+      vendor: 'vendor_id',
+      delivery: 'delivery_partner_id',
+    };
+    const fieldToCheck = roleFieldMap[userRole || ''];
+    if (!fieldToCheck || order[fieldToCheck] !== userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized to delete this order' }, { status: 403 });
+    }
+
+    // Soft-delete: mark this role's view as deleted
+    const deletedBy = order.deleted_by || {};
+    deletedBy[userRole as string] = true;
+
+    await db.collection(Collections.ORDERS).doc(order.id).update({
+      deleted_by: deletedBy,
+      updated_at: new Date().toISOString(),
+    });
+
+    return NextResponse.json({ success: true, message: 'Order removed from history' });
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    return NextResponse.json({ success: false, error: 'Failed to delete order' }, { status: 500 });
+  }
+}

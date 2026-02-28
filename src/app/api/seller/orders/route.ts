@@ -38,7 +38,20 @@ export async function GET(request: NextRequest) {
     query = query.limit(limit);
 
     const ordersSnap = await query.get();
-    const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Record<string, unknown>[];
+    let orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Record<string, unknown>[];
+
+    // Auto-delete: hide delivered/cancelled orders older than 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    orders = orders.filter(o => {
+      if (['delivered', 'cancelled'].includes(o.status as string)) {
+        const doneAt = (o.delivered_at as string) || (o.cancelled_at as string) || (o.updated_at as string) || (o.created_at as string);
+        if (doneAt && doneAt < thirtyDaysAgo) return false;
+      }
+      return true;
+    });
+
+    // Filter out soft-deleted orders for vendor
+    orders = orders.filter(o => !(o.deleted_by as Record<string, boolean> | undefined)?.vendor);
 
     // Fetch customer info for each order
     const customerIds = [...new Set(orders.map(o => String(o.customer_id)).filter(Boolean))];

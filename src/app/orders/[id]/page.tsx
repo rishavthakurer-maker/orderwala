@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { Package, MapPin, Phone, Clock, CheckCircle, Truck, ShoppingBag, Star, MessageSquare } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { Package, MapPin, Phone, Clock, CheckCircle, Truck, ShoppingBag, Star, MessageSquare, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Modal, Skeleton } from '@/components/ui';
 import { Header, Footer, BottomNav } from '@/components/layout';
 import { formatPrice, formatDateTime } from '@/lib/utils';
@@ -70,6 +70,7 @@ const statusOrder = ['pending', 'confirmed', 'preparing', 'picked_up', 'on_the_w
 
 export default function OrderTrackingPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const [order, setOrder] = useState<OrderData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +81,7 @@ export default function OrderTrackingPage() {
   const [productFeedback, setProductFeedback] = useState('');
   const [deliveryFeedback, setDeliveryFeedback] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
+  const [deletingOrder, setDeletingOrder] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -129,6 +131,25 @@ export default function OrderTrackingPage() {
       toast.error('Failed to submit rating');
     } finally {
       setSubmittingRating(false);
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!confirm('Remove this order from your history? This cannot be undone.')) return;
+    setDeletingOrder(true);
+    try {
+      const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Order removed from history');
+        router.push('/account');
+      } else {
+        toast.error(data.error || 'Failed to delete order');
+      }
+    } catch {
+      toast.error('Failed to delete order');
+    } finally {
+      setDeletingOrder(false);
     }
   };
 
@@ -336,6 +357,19 @@ export default function OrderTrackingPage() {
             </>
           )}
         </div>
+
+        {/* Delete from history (delivered/cancelled only) */}
+        {(order.status === 'delivered' || order.status === 'cancelled') && (
+          <Button
+            variant="outline"
+            className="w-full text-red-600 border-red-200 hover:bg-red-50"
+            onClick={handleDeleteOrder}
+            disabled={deletingOrder}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {deletingOrder ? 'Removing...' : 'Remove from Order History'}
+          </Button>
+        )}
       </div>
 
       {/* Rating Modal */}

@@ -31,8 +31,16 @@ export async function GET(request: NextRequest) {
     if (type === 'active') {
       filteredOrders = allOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
     } else {
+      // Auto-delete: hide delivered/cancelled orders older than 30 days
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       filteredOrders = allOrders
         .filter(o => o.status === 'delivered' || o.status === 'cancelled')
+        .filter(o => {
+          const doneAt = (o.delivered_at as string) || (o.cancelled_at as string) || (o.updated_at as string) || (o.created_at as string);
+          return !doneAt || doneAt >= thirtyDaysAgo;
+        })
+        // Filter out soft-deleted orders
+        .filter(o => !(o.deleted_by as Record<string, boolean> | undefined)?.delivery)
         .sort((a, b) => {
           const aDate = (a.delivered_at as string) || '';
           const bDate = (b.delivered_at as string) || '';

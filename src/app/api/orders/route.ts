@@ -45,20 +45,35 @@ export async function GET(request: NextRequest) {
 
     query = query.orderBy('created_at', 'desc');
 
-    // Get total count for pagination
-    const countSnap = await query.count().get();
-    const total = countSnap.data().count;
+    // Fetch all matching orders (we filter soft-deleted & expired locally)
+    const ordersSnap = await query.get();
 
-    // Paginate
+    let orders: OrderRecord[] = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Auto-delete: hide delivered/cancelled orders older than 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    orders = orders.filter(o => {
+      if (['delivered', 'cancelled'].includes(o.status)) {
+        const doneAt = o.delivered_at || o.cancelled_at || o.updated_at || o.created_at;
+        if (doneAt && doneAt < thirtyDaysAgo) return false;
+      }
+      return true;
+    });
+
+    // Filter out soft-deleted orders for the current user's role
+    if (userRole && userRole !== 'admin') {
+      orders = orders.filter(o => !o.deleted_by?.[userRole]);
+    }
+
+    // Apply pagination on filtered results
+    const total = orders.length;
     const offset = (page - 1) * limit;
-    const ordersSnap = await query.offset(offset).limit(limit).get();
-
-    const orders: OrderRecord[] = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const paginatedOrders = orders.slice(offset, offset + limit);
 
     // Fetch related docs (customer, vendor, delivery_partner) in parallel
-    const customerIds = [...new Set(orders.map(o => o.customer_id).filter(Boolean))];
-    const vendorIds = [...new Set(orders.map(o => o.vendor_id).filter(Boolean))];
-    const deliveryPartnerIds = [...new Set(orders.map(o => o.delivery_partner_id).filter(Boolean))];
+    const customerIds = [...new Set(paginatedOrders.map(o => o.customer_id).filter(Boolean))];
+    const vendorIds = [...new Set(paginatedOrders.map(o => o.vendor_id).filter(Boolean))];
+    const deliveryPartnerIds = [...new Set(paginatedOrders.map(o => o.delivery_partner_id).filter(Boolean))];
 
     const [customerDocs, vendorDocs, deliveryDocs] = await Promise.all([
       Promise.all(customerIds.map(cid => db.collection(Collections.USERS).doc(cid).get())),
@@ -80,7 +95,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to match frontend expectations
-    const transformedOrders = orders.map((order: OrderRecord) => {
+    const transformedOrders = paginatedOrders.map((order: OrderRecord) => {
       const customer = customersMap[order.customer_id] || null;
       const vendor = vendorsMap[order.vendor_id] || null;
       const delivery_partner = deliveryMap[order.delivery_partner_id] || null;
