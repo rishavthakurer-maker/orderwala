@@ -128,12 +128,7 @@ export async function GET(request: NextRequest) {
           phone: vendor.phone,
           logo: vendor.logo,
           category: vendor.category,
-          address: vendorAddr ? {
-            address: vendorAddr.address || vendorAddr.street || '',
-            city: vendorAddr.city || '',
-            lat: vendorLat || null,
-            lng: vendorLng || null,
-          } : null,
+          address: vendorAddr ? [vendorAddr.street || vendorAddr.address, vendorAddr.city, vendorAddr.state, vendorAddr.pincode].filter(Boolean).join(', ') : '',
         } : null,
         pickupDistance: pickupDistance !== null ? Math.round(pickupDistance * 10) / 10 : null,
         deliveryDistance: deliveryDistance !== null ? Math.round(deliveryDistance * 10) / 10 : null,

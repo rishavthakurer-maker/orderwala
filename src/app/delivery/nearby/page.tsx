@@ -31,7 +31,7 @@ interface NearbyOrder {
     phone: string;
     logo: string;
     category: string;
-    address: { address: string; city: string; lat: number | null; lng: number | null } | null;
+    address: string | null;
   } | null;
   pickupDistance: number | null;
   deliveryDistance: number | null;
@@ -266,7 +266,7 @@ export default function NearbyDeliveriesPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-orange-600 font-medium">PICKUP</p>
-                    <p className="text-xs text-gray-600 truncate">{order.vendor?.address?.address || order.vendor?.storeName || 'Vendor'}</p>
+                    <p className="text-xs text-gray-600 truncate">{order.vendor?.address || order.vendor?.storeName || 'Vendor'}</p>
                   </div>
                 </div>
 
@@ -340,7 +340,7 @@ export default function NearbyDeliveriesPage() {
                   <div>
                     <p className="text-xs text-orange-600 font-medium uppercase">Pickup From</p>
                     <p className="font-bold text-gray-900 mt-1">{selectedOrder.vendor.storeName}</p>
-                    <p className="text-sm text-gray-500">{selectedOrder.vendor.address?.address || ''}</p>
+                    <p className="text-sm text-gray-500">{selectedOrder.vendor.address || ''}</p>
                     {selectedOrder.vendor.category && (
                       <Badge variant="secondary" className="mt-1">{selectedOrder.vendor.category}</Badge>
                     )}

@@ -52,7 +52,11 @@ export async function GET(request: NextRequest) {
         const vendorSnap = await db.collection(Collections.VENDORS).doc(o.vendor_id as string).get();
         if (vendorSnap.exists) {
           const v = vendorSnap.data()!;
-          vendor = { _id: vendorSnap.id, storeName: v.store_name, phone: v.phone, address: v.address };
+          const addr = v.address;
+          const addressStr = typeof addr === 'object' && addr
+            ? [addr.street, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ')
+            : (addr || '');
+          vendor = { _id: vendorSnap.id, storeName: v.store_name, phone: v.phone, address: addressStr };
         }
       }
 
