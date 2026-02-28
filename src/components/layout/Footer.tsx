@@ -134,7 +134,7 @@ export function Footer() {
               © {new Date().getFullYear()} Order Wala. All rights reserved.
             </p>
             <p className="text-sm text-gray-400">
-              Made with ❤️ for Bihar | Prepared by Rahul Kumar
+              Made by KRA Tech Solutions
             </p>
           </div>
         </div>
