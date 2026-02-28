@@ -164,6 +164,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!vendorId) {
+      return NextResponse.json(
+        { success: false, error: 'Vendor ID is missing. Please try adding the item to cart again.' },
+        { status: 400 }
+      );
+    }
+
     // Verify vendor exists
     const vendorDoc = await db.collection(Collections.VENDORS).doc(vendorId).get();
     if (!vendorDoc.exists) {
@@ -187,28 +194,31 @@ export async function POST(request: NextRequest) {
       }
 
       const product = { id: productDoc.id, ...productDoc.data() } as OrderRecord;
+      const currentStock = typeof product.stock === 'number' ? product.stock : 999;
 
-      if (product.stock < item.quantity) {
+      if (currentStock < item.quantity) {
         return NextResponse.json(
           { success: false, error: `Insufficient stock for ${product.name}` },
           { status: 400 }
         );
       }
 
+      const itemPrice = typeof product.price === 'number' ? product.price : 0;
+
       orderItems.push({
         product: product.id,
-        name: product.name,
-        price: product.price,
+        name: product.name || 'Unknown Product',
+        price: itemPrice,
         quantity: item.quantity,
-        unit: product.unit,
+        unit: product.unit || 'pc',
         image: product.images?.[0] || '',
       });
 
-      subtotal += product.price * item.quantity;
+      subtotal += itemPrice * item.quantity;
 
       // Update stock
       await db.collection(Collections.PRODUCTS).doc(product.id).update({
-        stock: product.stock - item.quantity,
+        stock: currentStock - item.quantity,
         updated_at: new Date().toISOString(),
       });
     }
@@ -311,8 +321,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('Error creating order:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create order';
     return NextResponse.json(
-      { success: false, error: 'Failed to create order' },
+      { success: false, error: `Failed to create order: ${errorMessage}` },
       { status: 500 }
     );
   }
