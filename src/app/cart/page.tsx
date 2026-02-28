@@ -21,10 +21,9 @@ export default function CartPage() {
   const [showClearModal, setShowClearModal] = useState(false);
 
   const subtotal = getTotal();
-  const deliveryFee = subtotal > 500 ? 0 : 40;
-  const platformFee = 5;
+  const deliveryFee = subtotal >= 199 ? 0 : 30;
   const discount = appliedPromo?.discount || 0;
-  const total = subtotal + deliveryFee + platformFee - discount;
+  const total = subtotal + deliveryFee - discount;
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) {
@@ -242,10 +241,6 @@ export default function CartPage() {
                   <span className={deliveryFee === 0 ? 'text-green-600 font-medium' : 'font-medium'}>
                     {deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}
                   </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Platform Fee</span>
-                  <span className="font-medium">{formatPrice(platformFee)}</span>
                 </div>
                 {appliedPromo && (
                   <div className="flex justify-between text-green-600">

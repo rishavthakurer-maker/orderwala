@@ -48,6 +48,17 @@ export async function GET(
       );
     }
 
+    // Authorization check — only related users can view
+    const userId = session.user.id;
+    const role = (session.user as Record<string, unknown>).role as string;
+    const isAllowed = role === 'admin' ||
+      order.customer_id === userId ||
+      order.vendor_id === userId ||
+      order.delivery_partner_id === userId;
+    if (!isAllowed) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
     // Fetch related docs in parallel
     const [customerDoc, vendorDoc, deliveryDoc] = await Promise.all([
       order.customer_id ? db.collection(Collections.USERS).doc(order.customer_id).get() : null,
@@ -147,6 +158,17 @@ export async function PUT(
         { success: false, error: 'Order not found' },
         { status: 404 }
       );
+    }
+
+    // Authorization check — only related users can update
+    const userId = session.user.id;
+    const role = (session.user as Record<string, unknown>).role as string;
+    const isAllowed = role === 'admin' ||
+      order.customer_id === userId ||
+      order.vendor_id === userId ||
+      order.delivery_partner_id === userId;
+    if (!isAllowed) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
     // Validate status transition

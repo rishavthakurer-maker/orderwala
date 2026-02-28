@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 const MapPicker = dynamic(() => import('@/components/map/MapPicker').then(m => ({ default: m.MapPicker })), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-[350px] bg-gray-50 rounded-lg border">
+    <div className="flex items-center justify-center h-87.5 bg-gray-50 rounded-lg border">
       <Loader2 className="h-6 w-6 animate-spin text-green-600" />
       <span className="ml-2 text-sm text-gray-500">Loading map...</span>
     </div>

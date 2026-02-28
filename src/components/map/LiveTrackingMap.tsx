@@ -167,7 +167,7 @@ export default function LiveTrackingMap({ orderId, deliveryAddress, vendorAddres
       </div>
 
       {/* Map */}
-      <div style={{ height: '280px', width: '100%' }}>
+      <div className="h-70 w-full">
         <MapContainer
           center={center}
           zoom={positions.length > 0 ? 14 : 5}

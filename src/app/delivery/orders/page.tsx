@@ -36,10 +36,20 @@ function useLocationTracking(orders: OrderData[]) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastPosRef = useRef<{ lat: number; lng: number } | null>(null);
 
+  const trackingIdsRef = useRef<string>('[]');
+
   useEffect(() => {
-    const trackingOrders = orders.filter(o => ['picked_up', 'on_the_way'].includes(o.status));
-    if (trackingOrders.length === 0) {
-      // No active orders to track — stop watching
+    const newIds = JSON.stringify(
+      orders.filter(o => ['picked_up', 'on_the_way'].includes(o.status)).map(o => o._id).sort()
+    );
+    if (newIds !== trackingIdsRef.current) {
+      trackingIdsRef.current = newIds;
+    }
+  }, [orders]);
+
+  useEffect(() => {
+    const ids: string[] = JSON.parse(trackingIdsRef.current);
+    if (ids.length === 0) {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
@@ -62,24 +72,20 @@ function useLocationTracking(orders: OrderData[]) {
       );
     }
 
-    // Send location every 10 seconds
     const sendLocation = async () => {
       if (!lastPosRef.current) return;
       const { lat, lng } = lastPosRef.current;
-      for (const order of trackingOrders) {
+      for (const orderId of ids) {
         try {
           await fetch('/api/delivery/location', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: order._id, lat, lng }),
+            body: JSON.stringify({ orderId, lat, lng }),
           });
-        } catch {
-          // Silently fail — location is best-effort
-        }
+        } catch { /* best-effort */ }
       }
     };
 
-    // Send immediately then every 10s
     sendLocation();
     intervalRef.current = setInterval(sendLocation, 10000);
 
@@ -93,7 +99,7 @@ function useLocationTracking(orders: OrderData[]) {
         intervalRef.current = null;
       }
     };
-  }, [orders]);
+  }, [trackingIdsRef.current]);
 }
 
 export default function DeliveryOrdersPage() {

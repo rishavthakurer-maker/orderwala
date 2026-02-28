@@ -218,7 +218,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const itemPrice = typeof product.price === 'number' ? product.price : 0;
+      const itemPrice = typeof product.discount_price === 'number' && product.discount_price > 0
+        ? product.discount_price
+        : (typeof product.price === 'number' ? product.price : 0);
 
       orderItems.push({
         product: product.id,

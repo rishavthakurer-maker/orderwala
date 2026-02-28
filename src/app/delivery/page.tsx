@@ -40,9 +40,20 @@ function useLocationTracking(activeOrders: OrderData[]) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastPosRef = useRef<{ lat: number; lng: number } | null>(null);
 
+  const trackingIdsRef = useRef<string>('[]');
+
   useEffect(() => {
-    const trackingOrders = activeOrders.filter(o => ['picked_up', 'on_the_way'].includes(o.status));
-    if (trackingOrders.length === 0) {
+    const newIds = JSON.stringify(
+      activeOrders.filter(o => ['picked_up', 'on_the_way'].includes(o.status)).map(o => o._id).sort()
+    );
+    if (newIds !== trackingIdsRef.current) {
+      trackingIdsRef.current = newIds;
+    }
+  }, [activeOrders]);
+
+  useEffect(() => {
+    const ids: string[] = JSON.parse(trackingIdsRef.current);
+    if (ids.length === 0) {
       if (watchIdRef.current !== null) { navigator.geolocation.clearWatch(watchIdRef.current); watchIdRef.current = null; }
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
       return;
@@ -57,12 +68,12 @@ function useLocationTracking(activeOrders: OrderData[]) {
     const sendLocation = async () => {
       if (!lastPosRef.current) return;
       const { lat, lng } = lastPosRef.current;
-      for (const order of trackingOrders) {
+      for (const orderId of ids) {
         try {
           await fetch('/api/delivery/location', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: order._id, lat, lng }),
+            body: JSON.stringify({ orderId, lat, lng }),
           });
         } catch { /* best-effort */ }
       }
@@ -73,7 +84,7 @@ function useLocationTracking(activeOrders: OrderData[]) {
       if (watchIdRef.current !== null) { navigator.geolocation.clearWatch(watchIdRef.current); watchIdRef.current = null; }
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
     };
-  }, [activeOrders]);
+  }, [trackingIdsRef.current]);
 }
 
 export default function DeliveryDashboard() {

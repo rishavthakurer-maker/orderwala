@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 const LiveTrackingMap = dynamic(() => import('@/components/map/LiveTrackingMap'), {
   ssr: false,
   loading: () => (
-    <div className="h-[280px] bg-blue-50 rounded-xl flex items-center justify-center animate-pulse">
+    <div className="h-70 bg-blue-50 rounded-xl flex items-center justify-center animate-pulse">
       <p className="text-blue-400">Loading map...</p>
     </div>
   ),
@@ -111,16 +111,18 @@ export default function OrderTrackingPage() {
     }
   }, [id]);
 
+  const statusRef = useRef(order?.status);
+  statusRef.current = order?.status;
+
   useEffect(() => {
     fetchOrderData();
-    // Auto-refresh while order is active (not delivered/cancelled)
     const interval = setInterval(() => {
-      if (order && !['delivered', 'cancelled'].includes(order.status)) {
+      if (statusRef.current && !['delivered', 'cancelled'].includes(statusRef.current)) {
         fetchOrderData();
       }
     }, 15000);
     return () => clearInterval(interval);
-  }, [fetchOrderData, order?.status]);
+  }, [fetchOrderData]);
 
 
 

@@ -221,7 +221,7 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
         )}
         {/* Suggestions dropdown */}
         {suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-[1000] max-h-60 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-1000 max-h-60 overflow-y-auto">
             {suggestions.map((s) => {
               const parts = s.display_name.split(', ');
               const mainText = parts[0] || s.display_name;
@@ -245,7 +245,7 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
       </div>
 
       {/* Map */}
-      <div className="rounded-lg overflow-hidden border relative" style={{ height }}>
+      <div className={`rounded-lg overflow-hidden border relative`} style={{ height }}>
         <MapContainer
           center={center}
           zoom={zoom}
@@ -266,7 +266,7 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
         <button
           onClick={getCurrentLocation}
           disabled={geoLoading}
-          className="absolute bottom-4 right-4 bg-white rounded-full p-3 shadow-lg border hover:bg-gray-50 disabled:opacity-50 z-[1000]"
+          className="absolute bottom-4 right-4 bg-white rounded-full p-3 shadow-lg border hover:bg-gray-50 disabled:opacity-50 z-1000"
           title="Use my current location"
         >
           {geoLoading ? (
@@ -278,7 +278,7 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
 
         {/* Loading overlay */}
         {loading && (
-          <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-[1000]">
+          <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-1000">
             <Loader2 className="h-6 w-6 animate-spin text-green-600" />
           </div>
         )}
