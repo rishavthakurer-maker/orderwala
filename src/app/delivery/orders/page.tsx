@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Package, Navigation, Phone, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Modal, Skeleton } from '@/components/ui';
 import { formatPrice, getOrderStatusColor } from '@/lib/utils';
@@ -30,6 +30,72 @@ const statusLabels: Record<string, string> = {
   delivered: 'Delivered',
 };
 
+// Send GPS location to server for active delivery orders
+function useLocationTracking(orders: OrderData[]) {
+  const watchIdRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastPosRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    const trackingOrders = orders.filter(o => ['picked_up', 'on_the_way'].includes(o.status));
+    if (trackingOrders.length === 0) {
+      // No active orders to track — stop watching
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    // Start watching position
+    if (watchIdRef.current === null && 'geolocation' in navigator) {
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (pos) => {
+          lastPosRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        },
+        (err) => console.error('Geolocation error:', err),
+        { enableHighAccuracy: true, maximumAge: 5000 }
+      );
+    }
+
+    // Send location every 10 seconds
+    const sendLocation = async () => {
+      if (!lastPosRef.current) return;
+      const { lat, lng } = lastPosRef.current;
+      for (const order of trackingOrders) {
+        try {
+          await fetch('/api/delivery/location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: order._id, lat, lng }),
+          });
+        } catch {
+          // Silently fail — location is best-effort
+        }
+      }
+    };
+
+    // Send immediately then every 10s
+    sendLocation();
+    intervalRef.current = setInterval(sendLocation, 10000);
+
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [orders]);
+}
+
 export default function DeliveryOrdersPage() {
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,6 +119,9 @@ export default function DeliveryOrdersPage() {
     const interval = setInterval(fetchOrders, 15000);
     return () => clearInterval(interval);
   }, [fetchOrders]);
+
+  // Automatically share GPS location for active delivery orders
+  useLocationTracking(orders);
 
   const updateOrderStatus = async (orderId: string, action: string) => {
     try {

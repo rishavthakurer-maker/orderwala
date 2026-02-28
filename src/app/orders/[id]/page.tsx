@@ -1,13 +1,23 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { Package, MapPin, Phone, Clock, CheckCircle, Truck, ShoppingBag, Star, MessageSquare, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Modal, Skeleton } from '@/components/ui';
 import { Header, Footer, BottomNav } from '@/components/layout';
 import { formatPrice, formatDateTime } from '@/lib/utils';
 import toast from 'react-hot-toast';
+
+const LiveTrackingMap = dynamic(() => import('@/components/map/LiveTrackingMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[280px] bg-blue-50 rounded-xl flex items-center justify-center animate-pulse">
+      <p className="text-blue-400">Loading map...</p>
+    </div>
+  ),
+});
 
 interface OrderItem {
   name: string;
@@ -35,12 +45,16 @@ interface OrderData {
     city?: string;
     state?: string;
     pincode?: string;
+    latitude?: number;
+    longitude?: number;
   };
   vendor?: {
     _id: string;
     storeName: string;
     phone?: string;
-    address?: string;
+    address?: string | Record<string, unknown>;
+    lat?: number | null;
+    lng?: number | null;
   };
   deliveryPartner?: {
     _id: string;
@@ -83,12 +97,7 @@ export default function OrderTrackingPage() {
   const [submittingRating, setSubmittingRating] = useState(false);
   const [deletingOrder, setDeletingOrder] = useState(false);
 
-  useEffect(() => {
-    fetchOrder();
-  }, [id]);
-
-  const fetchOrder = async () => {
-    setIsLoading(true);
+  const fetchOrderData = useCallback(async () => {
     try {
       const res = await fetch(`/api/orders/${id}`);
       const data = await res.json();
@@ -100,7 +109,20 @@ export default function OrderTrackingPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchOrderData();
+    // Auto-refresh while order is active (not delivered/cancelled)
+    const interval = setInterval(() => {
+      if (order && !['delivered', 'cancelled'].includes(order.status)) {
+        fetchOrderData();
+      }
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [fetchOrderData, order?.status]);
+
+
 
   const handleSubmitRating = async () => {
     if (productRating === 0 && deliveryRating === 0) return;
@@ -280,17 +302,22 @@ export default function OrderTrackingPage() {
           </Card>
         )}
 
-        {/* Map Placeholder */}
-        {!isDelivered && !isCancelled && (
-          <Card className="overflow-hidden">
-            <div className="h-48 bg-linear-to-br from-blue-100 to-green-100 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="h-10 w-10 text-blue-500 mx-auto mb-2" />
-                <p className="text-gray-600 font-medium">Live Tracking</p>
-                <p className="text-sm text-gray-500">Map integration coming soon</p>
-              </div>
-            </div>
-          </Card>
+        {/* Live Tracking Map */}
+        {['picked_up', 'on_the_way'].includes(order.status) && (
+          <LiveTrackingMap
+            orderId={order._id}
+            status={order.status}
+            deliveryAddress={order.deliveryAddress ? {
+              lat: order.deliveryAddress.latitude,
+              lng: order.deliveryAddress.longitude,
+              address: order.deliveryAddress.address,
+            } : undefined}
+            vendorAddress={order.vendor ? {
+              lat: order.vendor.lat ?? undefined,
+              lng: order.vendor.lng ?? undefined,
+              name: order.vendor.storeName,
+            } : undefined}
+          />
         )}
 
         {/* Order Items */}

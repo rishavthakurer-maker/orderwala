@@ -74,6 +74,8 @@ export async function GET(
         storeName: vendor.store_name,
         phone: vendor.phone,
         address: vendor.address,
+        lat: vendor.address?.latitude || null,
+        lng: vendor.address?.longitude || null,
       } : null,
       deliveryPartner: delivery_partner ? {
         _id: delivery_partner.id,
