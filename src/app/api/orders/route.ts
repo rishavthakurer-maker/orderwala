@@ -271,8 +271,8 @@ export async function POST(request: NextRequest) {
       delivery_address: deliveryAddress,
       payment_method: paymentMethod,
       payment_status: 'pending',
-      delivery_instructions: instructions,
-      promo_code: promoCode,
+      delivery_instructions: instructions || '',
+      promo_code: promoCode || '',
       status: 'pending',
       status_history: [{
         status: 'pending',
