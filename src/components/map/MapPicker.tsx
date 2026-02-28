@@ -1,12 +1,24 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { MapPin, Navigation, Search, Loader2, X } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
 
-const MAP_CONTAINER = { width: '100%', height: '100%' };
-const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 }; // India center
+// Fix Leaflet default marker icon (webpack/bundler issue)
+const defaultIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+L.Marker.prototype.options.icon = defaultIcon;
+
+const DEFAULT_CENTER: [number, number] = [20.5937, 78.9629]; // India center
 const DEFAULT_ZOOM = 5;
 const LOCATED_ZOOM = 16;
 
@@ -25,71 +37,97 @@ interface MapPickerProps {
   height?: string;
 }
 
-export function MapPicker({ onLocationSelect, initialLocation, height = '350px' }: MapPickerProps) {
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['places'],
-  });
+interface NominatimResult {
+  place_id: number;
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    state?: string;
+    postcode?: string;
+    [key: string]: string | undefined;
+  };
+}
 
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [marker, setMarker] = useState<{ lat: number; lng: number } | null>(initialLocation || null);
+// Extract city/state/pincode from Nominatim address
+function parseNominatimAddress(data: NominatimResult) {
+  const addr = data.address || {};
+  const city = addr.city || addr.town || addr.village || '';
+  const state = addr.state || '';
+  const pincode = addr.postcode || '';
+  return { city, state, pincode, address: data.display_name };
+}
+
+// Component to handle map click events
+function MapClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+// Component to programmatically fly the map to a position
+function MapFlyTo({ position, zoom }: { position: [number, number] | null; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, zoom, { duration: 1 });
+    }
+  }, [map, position, zoom]);
+  return null;
+}
+
+export function MapPicker({ onLocationSelect, initialLocation, height = '350px' }: MapPickerProps) {
+  const [marker, setMarker] = useState<[number, number] | null>(
+    initialLocation ? [initialLocation.lat, initialLocation.lng] : null
+  );
+  const [flyTarget, setFlyTarget] = useState<[number, number] | null>(
+    initialLocation ? [initialLocation.lat, initialLocation.lng] : null
+  );
+  const [flyZoom, setFlyZoom] = useState(initialLocation ? LOCATED_ZOOM : DEFAULT_ZOOM);
   const [address, setAddress] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-  const geocoder = useRef<google.maps.Geocoder | null>(null);
-  const placesService = useRef<google.maps.places.PlacesService | null>(null);
+  const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(false);
 
-  const onMapLoad = useCallback((mapInstance: google.maps.Map) => {
-    setMap(mapInstance);
-    geocoder.current = new google.maps.Geocoder();
-    autocompleteService.current = new google.maps.places.AutocompleteService();
-    placesService.current = new google.maps.places.PlacesService(mapInstance);
-
-    if (initialLocation) {
-      mapInstance.panTo(initialLocation);
-      mapInstance.setZoom(LOCATED_ZOOM);
-    }
-  }, [initialLocation]);
-
-  // Reverse geocode coordinates to address
+  // Reverse geocode using Nominatim (free OpenStreetMap)
   const reverseGeocode = useCallback(async (lat: number, lng: number) => {
-    if (!geocoder.current) return;
     setLoading(true);
     try {
-      const result = await geocoder.current.geocode({ location: { lat, lng } });
-      if (result.results[0]) {
-        const place = result.results[0];
-        const components = place.address_components;
-        let city = '', state = '', pincode = '';
-        components.forEach((c) => {
-          if (c.types.includes('locality')) city = c.long_name;
-          if (c.types.includes('administrative_area_level_1')) state = c.long_name;
-          if (c.types.includes('postal_code')) pincode = c.long_name;
-        });
-        const addr = place.formatted_address;
-        setAddress(addr);
-        onLocationSelect({ lat, lng, address: addr, city, state, pincode });
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data: NominatimResult = await res.json();
+      if (data.display_name) {
+        const parsed = parseNominatimAddress(data);
+        setAddress(parsed.address);
+        onLocationSelect({ lat, lng, ...parsed });
       }
     } catch (err) {
       console.error('Reverse geocode error:', err);
+      setAddress(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+      onLocationSelect({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
     } finally {
       setLoading(false);
     }
   }, [onLocationSelect]);
 
   // Handle map click
-  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      setMarker({ lat, lng });
-      map?.panTo({ lat, lng });
-      reverseGeocode(lat, lng);
-    }
-  }, [map, reverseGeocode]);
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    setMarker([lat, lng]);
+    setFlyTarget([lat, lng]);
+    setFlyZoom(LOCATED_ZOOM);
+    reverseGeocode(lat, lng);
+  }, [reverseGeocode]);
 
   // Get current location
   const getCurrentLocation = useCallback(() => {
@@ -102,9 +140,9 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        setMarker({ lat, lng });
-        map?.panTo({ lat, lng });
-        map?.setZoom(LOCATED_ZOOM);
+        setMarker([lat, lng]);
+        setFlyTarget([lat, lng]);
+        setFlyZoom(LOCATED_ZOOM);
         reverseGeocode(lat, lng);
         setGeoLoading(false);
       },
@@ -115,77 +153,54 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, [map, reverseGeocode]);
+  }, [reverseGeocode]);
 
-  // Auto-detect location on mount
+  // Auto-detect location on mount (only if no initial location)
   useEffect(() => {
-    if (isLoaded && map && !initialLocation) {
+    if (!mountedRef.current && !initialLocation) {
+      mountedRef.current = true;
       getCurrentLocation();
     }
-  }, [isLoaded, map, initialLocation, getCurrentLocation]);
+  }, [initialLocation, getCurrentLocation]);
 
-  // Search autocomplete
+  // Search using Nominatim (debounced)
   const handleSearchInput = useCallback((value: string) => {
     setSearchQuery(value);
-    if (!autocompleteService.current || value.length < 3) {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (value.length < 3) {
       setSuggestions([]);
       return;
     }
-    autocompleteService.current.getPlacePredictions(
-      { input: value, componentRestrictions: { country: 'in' } },
-      (predictions) => {
-        setSuggestions(predictions || []);
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&countrycodes=in&addressdetails=1&limit=5`,
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        const data: NominatimResult[] = await res.json();
+        setSuggestions(data || []);
+      } catch {
+        setSuggestions([]);
       }
-    );
+    }, 400);
   }, []);
 
   // Select a suggestion
-  const handleSelectSuggestion = useCallback((placeId: string, description: string) => {
+  const handleSelectSuggestion = useCallback((suggestion: NominatimResult) => {
     setSuggestions([]);
-    setSearchQuery(description);
-    if (!placesService.current) return;
-    placesService.current.getDetails(
-      { placeId, fields: ['geometry', 'address_components', 'formatted_address'] },
-      (place) => {
-        if (place?.geometry?.location) {
-          const lat = place.geometry.location.lat();
-          const lng = place.geometry.location.lng();
-          setMarker({ lat, lng });
-          map?.panTo({ lat, lng });
-          map?.setZoom(LOCATED_ZOOM);
+    setSearchQuery(suggestion.display_name);
+    const lat = parseFloat(suggestion.lat);
+    const lng = parseFloat(suggestion.lon);
+    setMarker([lat, lng]);
+    setFlyTarget([lat, lng]);
+    setFlyZoom(LOCATED_ZOOM);
+    const parsed = parseNominatimAddress(suggestion);
+    setAddress(parsed.address);
+    onLocationSelect({ lat, lng, ...parsed });
+  }, [onLocationSelect]);
 
-          const components = place.address_components || [];
-          let city = '', state = '', pincode = '';
-          components.forEach((c) => {
-            if (c.types.includes('locality')) city = c.long_name;
-            if (c.types.includes('administrative_area_level_1')) state = c.long_name;
-            if (c.types.includes('postal_code')) pincode = c.long_name;
-          });
-          const addr = place.formatted_address || description;
-          setAddress(addr);
-          onLocationSelect({ lat, lng, address: addr, city, state, pincode });
-        }
-      }
-    );
-  }, [map, onLocationSelect]);
-
-  if (loadError) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg border" style={{ height }}>
-        <MapPin className="h-8 w-8 text-gray-400 mb-2" />
-        <p className="text-gray-500 text-sm text-center">Map could not be loaded. Please enter your address manually below.</p>
-      </div>
-    );
-  }
-
-  if (!isLoaded) {
-    return (
-      <div className="flex items-center justify-center bg-gray-50 rounded-lg border" style={{ height }}>
-        <Loader2 className="h-6 w-6 animate-spin text-green-600" />
-        <span className="ml-2 text-sm text-gray-500">Loading map...</span>
-      </div>
-    );
-  }
+  const center: [number, number] = marker || DEFAULT_CENTER;
+  const zoom = marker ? LOCATED_ZOOM : DEFAULT_ZOOM;
 
   return (
     <div className="space-y-3">
@@ -206,47 +221,52 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
         )}
         {/* Suggestions dropdown */}
         {suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-            {suggestions.map((s) => (
-              <button
-                key={s.place_id}
-                onClick={() => handleSelectSuggestion(s.place_id, s.description)}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0 flex items-start gap-3"
-              >
-                <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{s.structured_formatting.main_text}</p>
-                  <p className="text-xs text-gray-500">{s.structured_formatting.secondary_text}</p>
-                </div>
-              </button>
-            ))}
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-[1000] max-h-60 overflow-y-auto">
+            {suggestions.map((s) => {
+              const parts = s.display_name.split(', ');
+              const mainText = parts[0] || s.display_name;
+              const secondaryText = parts.slice(1).join(', ');
+              return (
+                <button
+                  key={s.place_id}
+                  onClick={() => handleSelectSuggestion(s)}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0 flex items-start gap-3"
+                >
+                  <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{mainText}</p>
+                    <p className="text-xs text-gray-500 line-clamp-1">{secondaryText}</p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Map */}
       <div className="rounded-lg overflow-hidden border relative" style={{ height }}>
-        <GoogleMap
-          mapContainerStyle={MAP_CONTAINER}
-          center={marker || DEFAULT_CENTER}
-          zoom={marker ? LOCATED_ZOOM : DEFAULT_ZOOM}
-          onLoad={onMapLoad}
-          onClick={handleMapClick}
-          options={{
-            streetViewControl: false,
-            fullscreenControl: false,
-            mapTypeControl: false,
-            zoomControl: true,
-          }}
+        <MapContainer
+          center={center}
+          zoom={zoom}
+          style={{ width: '100%', height: '100%' }}
+          zoomControl={true}
+          attributionControl={false}
         >
-          {marker && <Marker position={marker} animation={google.maps.Animation.DROP} />}
-        </GoogleMap>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+          />
+          <MapClickHandler onClick={handleMapClick} />
+          <MapFlyTo position={flyTarget} zoom={flyZoom} />
+          {marker && <Marker position={marker} />}
+        </MapContainer>
 
         {/* Locate Me Button */}
         <button
           onClick={getCurrentLocation}
           disabled={geoLoading}
-          className="absolute bottom-4 right-4 bg-white rounded-full p-3 shadow-lg border hover:bg-gray-50 disabled:opacity-50 z-10"
+          className="absolute bottom-4 right-4 bg-white rounded-full p-3 shadow-lg border hover:bg-gray-50 disabled:opacity-50 z-[1000]"
           title="Use my current location"
         >
           {geoLoading ? (
@@ -258,7 +278,7 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
 
         {/* Loading overlay */}
         {loading && (
-          <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-[1000]">
             <Loader2 className="h-6 w-6 animate-spin text-green-600" />
           </div>
         )}

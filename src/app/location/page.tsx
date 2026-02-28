@@ -98,18 +98,16 @@ function LocationPageContent() {
         const lng = position.coords.longitude;
         try {
           const res = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
           );
           const data = await res.json();
-          if (data.results?.[0]) {
-            const place = data.results[0];
-            let city = '', state = '', pincode = '';
-            place.address_components?.forEach((c: { types: string[]; long_name: string }) => {
-              if (c.types.includes('locality')) city = c.long_name;
-              if (c.types.includes('administrative_area_level_1')) state = c.long_name;
-              if (c.types.includes('postal_code')) pincode = c.long_name;
-            });
-            handleLocationSelect({ lat, lng, address: place.formatted_address, city, state, pincode });
+          if (data.display_name) {
+            const addr = data.address || {};
+            const city = addr.city || addr.town || addr.village || '';
+            const state = addr.state || '';
+            const pincode = addr.postcode || '';
+            handleLocationSelect({ lat, lng, address: data.display_name, city, state, pincode });
           }
         } catch {
           handleLocationSelect({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
