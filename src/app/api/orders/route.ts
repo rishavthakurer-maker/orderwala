@@ -263,6 +263,7 @@ export async function POST(request: NextRequest) {
       order_number: orderNumber,
       customer_id: session.user.id,
       vendor_id: vendorId,
+      delivery_partner_id: null,
       items: orderItems,
       subtotal,
       delivery_fee: deliveryCharge,

@@ -5,7 +5,18 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { Store, Save, Phone, Mail, MapPin, Upload, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Input, Skeleton, Modal } from '@/components/ui';
+import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
+
+const MapPicker = dynamic(() => import('@/components/map/MapPicker').then(m => ({ default: m.MapPicker })), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-[250px] bg-gray-50 rounded-lg border">
+      <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
+      <span className="ml-2 text-sm text-gray-500">Loading map...</span>
+    </div>
+  ),
+});
 
 interface StoreData {
   id: string;
@@ -18,7 +29,7 @@ interface StoreData {
   delivery_radius: number;
   min_order_amount: number;
   delivery_fee: number;
-  address: { street?: string; city?: string; state?: string; pincode?: string };
+  address: { street?: string; city?: string; state?: string; pincode?: string; latitude?: number; longitude?: number };
   bank_details: { account_name?: string; account_number?: string; ifsc?: string; bank_name?: string } | null;
 }
 
@@ -40,6 +51,8 @@ export default function VendorSettingsPage() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [pincode, setPincode] = useState('');
+  const [shopLat, setShopLat] = useState(0);
+  const [shopLng, setShopLng] = useState(0);
   const [accountName, setAccountName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [ifsc, setIfsc] = useState('');
@@ -75,6 +88,8 @@ export default function VendorSettingsPage() {
         setCity(s.address?.city || '');
         setState(s.address?.state || '');
         setPincode(s.address?.pincode || '');
+        setShopLat(s.address?.latitude || 0);
+        setShopLng(s.address?.longitude || 0);
         setAccountName(s.bank_details?.account_name || '');
         setAccountNumber(s.bank_details?.account_number || '');
         setIfsc(s.bank_details?.ifsc || '');
@@ -130,7 +145,7 @@ export default function VendorSettingsPage() {
           deliveryRadius: parseFloat(deliveryRadius),
           minOrderAmount: parseFloat(minOrderAmount),
           deliveryFee: parseFloat(deliveryFee),
-          address: { street, city, state, pincode },
+          address: { street, city, state, pincode, latitude: shopLat, longitude: shopLng },
           bankDetails: { account_name: accountName, account_number: accountNumber, ifsc, bank_name: bankName },
         }),
       });
@@ -245,8 +260,24 @@ export default function VendorSettingsPage() {
 
       {/* Address */}
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5" /> Store Address</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5" /> Store Address & Location</CardTitle></CardHeader>
         <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Pick your shop location on the map</label>
+            <p className="text-xs text-gray-500 mb-2">Click on the map or search to set your shop&apos;s exact location. This helps customers and delivery partners find your shop.</p>
+            <MapPicker
+              onLocationSelect={(loc) => {
+                setShopLat(loc.lat);
+                setShopLng(loc.lng);
+                if (loc.address && !street) setStreet(loc.address);
+                if (loc.city && !city) setCity(loc.city);
+                if (loc.state && !state) setState(loc.state);
+                if (loc.pincode && !pincode) setPincode(loc.pincode);
+              }}
+              initialLocation={shopLat && shopLng ? { lat: shopLat, lng: shopLng } : null}
+              height="250px"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
             <Input value={street} onChange={(e) => setStreet(e.target.value)} />

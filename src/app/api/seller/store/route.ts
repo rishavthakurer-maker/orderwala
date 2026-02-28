@@ -121,7 +121,13 @@ export async function PUT(request: NextRequest) {
     if (body.phone !== undefined) updateData.phone = body.phone;
     if (body.email !== undefined) updateData.email = body.email;
     if (body.category !== undefined) updateData.category = body.category;
-    if (body.address !== undefined) updateData.address = body.address;
+    if (body.address !== undefined) {
+      // Merge lat/lng if provided separately
+      const addr = body.address;
+      if (body.latitude !== undefined) addr.latitude = body.latitude;
+      if (body.longitude !== undefined) addr.longitude = body.longitude;
+      updateData.address = addr;
+    }
     if (body.logo !== undefined) updateData.logo = body.logo;
     if (body.coverImage !== undefined) updateData.cover_image = body.coverImage;
     if (body.isOpen !== undefined) updateData.is_open = body.isOpen;

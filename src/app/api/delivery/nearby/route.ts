@@ -29,9 +29,9 @@ export async function GET(request: NextRequest) {
     const lng = parseFloat(searchParams.get('lng') || '0');
     const radius = parseFloat(searchParams.get('radius') || '10'); // default 10km
 
-    // Fetch available orders (status = 'ready', no delivery partner)
+    // Fetch available orders (pending/confirmed/preparing/ready, no delivery partner assigned)
     const snapshot = await db.collection(Collections.ORDERS)
-      .where('status', '==', 'ready')
+      .where('status', 'in', ['pending', 'confirmed', 'preparing', 'ready'])
       .where('delivery_partner_id', '==', null)
       .orderBy('created_at', 'desc')
       .limit(50)

@@ -48,11 +48,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Fix orders missing delivery_partner_id (required for Firestore null queries)
+    let ordersFixed = 0;
+    const ordersSnap = await db.collection(Collections.ORDERS).get();
+    for (const doc of ordersSnap.docs) {
+      const data = doc.data();
+      if (data.delivery_partner_id === undefined) {
+        batch.update(doc.ref, { delivery_partner_id: null });
+        ordersFixed++;
+      }
+    }
+
     await batch.commit();
 
     return NextResponse.json({
       success: true,
-      message: `Fixed ${productsFixed} products, ${vendorsFixed} vendors`,
+      message: `Fixed ${productsFixed} products, ${vendorsFixed} vendors, ${ordersFixed} orders`,
     });
   } catch (error) {
     console.error('Fix data error:', error);
