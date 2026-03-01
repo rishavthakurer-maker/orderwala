@@ -103,3 +103,48 @@ export async function PUT(
     return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const decoded = verifyAdminToken(request);
+    if (!decoded) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const db = getDb();
+
+    const userDoc = await db.collection(Collections.USERS).doc(id).get();
+    if (!userDoc.exists) {
+      return NextResponse.json({ success: false, message: 'Customer not found' }, { status: 404 });
+    }
+
+    // Delete related data: addresses, favorites, wallet transactions, notifications
+    const batch = db.batch();
+
+    const collections = [
+      { col: Collections.ADDRESSES, field: 'user_id' },
+      { col: Collections.FAVORITES, field: 'user_id' },
+      { col: Collections.WALLET_TRANSACTIONS, field: 'user_id' },
+      { col: Collections.NOTIFICATIONS, field: 'user_id' },
+    ];
+
+    for (const { col, field } of collections) {
+      const snap = await db.collection(col).where(field, '==', id).get();
+      snap.docs.forEach(doc => batch.delete(doc.ref));
+    }
+
+    // Delete the user document
+    batch.delete(db.collection(Collections.USERS).doc(id));
+
+    await batch.commit();
+
+    return NextResponse.json({ success: true, message: 'Customer deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting customer:', error);
+    return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
+  }
+}

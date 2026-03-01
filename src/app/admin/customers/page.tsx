@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, ChevronLeft, ChevronRight, ToggleLeft, ToggleRight, Phone, Mail, Wallet, Users, Loader2 } from 'lucide-react';
+import { Search, Eye, ChevronLeft, ChevronRight, ToggleLeft, ToggleRight, Phone, Mail, Wallet, Users, Loader2, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Card, CardContent, Button, Input, Badge, Modal } from '@/components/ui';
 import { formatPrice, formatDateTime } from '@/lib/utils';
 
@@ -63,6 +64,31 @@ export default function CustomersPage() {
       }
     } catch (err) {
       console.error('Error toggling customer status:', err);
+    }
+  };
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Customer | null>(null);
+
+  const handleDeleteCustomer = async (customer: Customer) => {
+    setDeletingId(customer.id);
+    try {
+      const res = await fetch(`/api/admin/customers/${customer.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`${customer.name || 'Customer'} deleted successfully`);
+        setConfirmDelete(null);
+        fetchCustomers();
+      } else {
+        toast.error(data.message || 'Failed to delete customer');
+      }
+    } catch {
+      toast.error('Failed to delete customer');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -177,9 +203,14 @@ export default function CustomersPage() {
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Button variant="ghost" size="sm" onClick={() => setViewingCustomer(customer)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => setViewingCustomer(customer)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(customer)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -206,6 +237,30 @@ export default function CustomersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Delete Customer">
+        {confirmDelete && (
+          <div className="p-6">
+            <p className="text-gray-700 mb-2">Are you sure you want to permanently delete this customer?</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="font-medium text-gray-900">{confirmDelete.name || 'N/A'}</p>
+              <p className="text-sm text-gray-500">{confirmDelete.email || confirmDelete.phone || 'No contact'}</p>
+            </div>
+            <p className="text-xs text-red-600 mb-4">This will also delete their addresses, favorites, wallet transactions, and notifications. Orders will be preserved.</p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => handleDeleteCustomer(confirmDelete)}
+                disabled={deletingId === confirmDelete.id}
+              >
+                {deletingId === confirmDelete.id ? 'Deleting...' : 'Delete Customer'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal isOpen={!!viewingCustomer} onClose={() => setViewingCustomer(null)} title="Customer Details" size="lg">
         {viewingCustomer && (
