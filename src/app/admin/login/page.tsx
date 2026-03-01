@@ -111,17 +111,6 @@ export default function AdminLoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500 text-center mb-2">Demo Credentials</p>
-            <p className="text-sm text-gray-700 text-center">
-              <span className="font-medium">Email:</span> admin@orderwala.com
-            </p>
-            <p className="text-sm text-gray-700 text-center">
-              <span className="font-medium">Password:</span> admin123
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
