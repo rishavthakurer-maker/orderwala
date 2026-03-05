@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -12,6 +12,36 @@ import dynamic from 'next/dynamic';
 
 const MapPicker = dynamic(() => import('@/components/map/MapPicker').then(m => ({ default: m.MapPicker })), { ssr: false });
 import toast from 'react-hot-toast';
+
+declare global {
+  interface Window {
+    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
+  }
+}
+
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpayResponse) => void;
+  prefill: { name: string; email: string; contact: string };
+  theme: { color: string };
+  modal?: { ondismiss?: () => void };
+}
+
+interface RazorpayInstance {
+  open: () => void;
+  on: (event: string, handler: () => void) => void;
+}
+
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
 
 interface Address {
   id: string;
@@ -130,6 +160,131 @@ export default function CheckoutPage() {
     } catch { toast.error('Failed to add address'); }
   };
 
+  // Load Razorpay script
+  const loadRazorpayScript = useCallback((): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }, []);
+
+  const createOrder = async () => {
+    const vendorId = items[0]?.vendorId;
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: items.map(item => ({ productId: item.productId, quantity: item.quantity })),
+        vendorId,
+        deliveryAddress: {
+          type: selectedAddress!.type,
+          name: selectedAddress!.name,
+          phone: selectedAddress!.phone,
+          address: `${selectedAddress!.address}${selectedAddress!.address2 ? ', ' + selectedAddress!.address2 : ''}`,
+          city: selectedAddress!.city,
+          state: selectedAddress!.state,
+          pincode: selectedAddress!.pincode,
+          latitude: selectedAddress!.latitude,
+          longitude: selectedAddress!.longitude,
+        },
+        paymentMethod: selectedPayment === 'cod' ? 'Cash on Delivery' : selectedPayment === 'upi' ? 'UPI' : 'Card',
+        instructions,
+        promoCode: appliedPromo?.code,
+      }),
+    });
+    const data = await res.json();
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to create order');
+    }
+    return data.data;
+  };
+
+  const handleOnlinePayment = async (order: { _id: string; orderId: string; total: number }) => {
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      toast.error('Failed to load payment gateway. Please check your internet connection.');
+      return;
+    }
+
+    // Create Razorpay order
+    const payRes = await fetch('/api/payment/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: order.total,
+        currency: 'INR',
+        orderId: order._id,
+        receipt: order.orderId,
+      }),
+    });
+    const payData = await payRes.json();
+    if (!payData.success) {
+      toast.error(payData.error || 'Failed to initiate payment');
+      return;
+    }
+
+    const options: RazorpayOptions = {
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
+      amount: payData.data.amount,
+      currency: payData.data.currency || 'INR',
+      name: 'Orderwala',
+      description: `Order #${order.orderId}`,
+      order_id: payData.data.razorpayOrderId,
+      handler: async (response: RazorpayResponse) => {
+        try {
+          const verifyRes = await fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: order._id,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            clearCart();
+            toast.success('Payment successful!');
+            router.push(`/order-success?orderId=${order.orderId}`);
+          } else {
+            toast.error('Payment verification failed. Contact support if amount was deducted.');
+          }
+        } catch {
+          toast.error('Payment verification failed. Please contact support.');
+        } finally {
+          setIsProcessing(false);
+        }
+      },
+      prefill: {
+        name: selectedAddress?.name || session?.user?.name || '',
+        email: session?.user?.email || '',
+        contact: selectedAddress?.phone || '',
+      },
+      theme: { color: '#f97316' },
+      modal: {
+        ondismiss: () => {
+          setIsProcessing(false);
+          toast.error('Payment cancelled. Your order is saved — you can retry from Order History.');
+        },
+      },
+    };
+
+    const razorpay = new window.Razorpay(options);
+    razorpay.on('payment.failed', () => {
+      setIsProcessing(false);
+      toast.error('Payment failed. Please try again or choose Cash on Delivery.');
+    });
+    razorpay.open();
+  };
+
   const handlePlaceOrder = async () => {
     if (status !== 'authenticated') {
       toast.error('Please login to place your order');
@@ -141,40 +296,19 @@ export default function CheckoutPage() {
 
     setIsProcessing(true);
     try {
-      const vendorId = items[0]?.vendorId;
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: items.map(item => ({ productId: item.productId, quantity: item.quantity })),
-          vendorId,
-          deliveryAddress: {
-            type: selectedAddress.type,
-            name: selectedAddress.name,
-            phone: selectedAddress.phone,
-            address: `${selectedAddress.address}${selectedAddress.address2 ? ', ' + selectedAddress.address2 : ''}`,
-            city: selectedAddress.city,
-            state: selectedAddress.state,
-            pincode: selectedAddress.pincode,
-            latitude: selectedAddress.latitude,
-            longitude: selectedAddress.longitude,
-          },
-          paymentMethod: selectedPayment === 'cod' ? 'Cash on Delivery' : selectedPayment === 'upi' ? 'UPI' : 'Card',
-          instructions,
-          promoCode: appliedPromo?.code,
-        }),
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
+      const order = await createOrder();
+
+      if (selectedPayment === 'cod') {
+        // Cash on Delivery — order is already created, redirect
         clearCart();
-        router.push(`/order-success?orderId=${data.data.orderId}`);
+        router.push(`/order-success?orderId=${order.orderId}`);
       } else {
-        toast.error(data.error || 'Failed to place order');
+        // Online payment (UPI / Card) — open Razorpay
+        await handleOnlinePayment(order);
       }
     } catch (error) {
       console.error('Order error:', error);
-      toast.error('Something went wrong. Please try again.');
-    } finally {
+      toast.error(error instanceof Error ? error.message : 'Something went wrong. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -325,7 +459,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <Button className="w-full" size="lg" onClick={handlePlaceOrder} disabled={isProcessing || !selectedAddress}>
-                  {isProcessing ? 'Processing...' : `Place Order  ${formatPrice(total)}`}
+                  {isProcessing ? 'Processing...' : selectedPayment === 'cod' ? `Place Order  ${formatPrice(total)}` : `Pay ${formatPrice(total)}`}
                 </Button>
                 <p className="text-xs text-gray-500 text-center">By placing this order, you agree to our Terms of Service</p>
               </CardContent>

@@ -109,3 +109,46 @@ export async function PUT(
     return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
   }
 }
+
+// DELETE /api/admin/orders/[id] - permanently delete an order
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const admin = verifyAdminToken(request);
+    if (!admin) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const db = getDb();
+    const orderRef = db.collection(Collections.ORDERS).doc(id);
+    const orderSnap = await orderRef.get();
+
+    if (!orderSnap.exists) {
+      return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
+    }
+
+    // Delete the order permanently
+    await orderRef.delete();
+
+    // Also clean up delivery location if exists
+    try {
+      const locSnap = await db.collection('delivery_locations').where('order_id', '==', id).get();
+      const batch = db.batch();
+      locSnap.docs.forEach(doc => batch.delete(doc.ref));
+      if (!locSnap.empty) await batch.commit();
+    } catch {
+      // ignore cleanup errors
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Order deleted permanently',
+    });
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
+  }
+}

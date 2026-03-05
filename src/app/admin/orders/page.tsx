@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, ShoppingCart } from 'lucide-react';
+import { Search, Eye, ChevronLeft, ChevronRight, Loader2, ShoppingCart, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Card, CardContent, Button, Input, Modal } from '@/components/ui';
 import { formatPrice, formatDateTime, getOrderStatusColor } from '@/lib/utils';
 
@@ -38,6 +39,8 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Order | null>(null);
   const itemsPerPage = 10;
 
   const getToken = () => localStorage.getItem('adminToken') || '';
@@ -86,6 +89,29 @@ export default function OrdersPage() {
       console.error('Error updating status:', err);
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handleDeleteOrder = async (order: Order) => {
+    try {
+      setDeletingId(order.id);
+      const res = await fetch(`/api/admin/orders/${order.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Order ${order.order_number} deleted permanently`);
+        setOrders(prev => prev.filter(o => o.id !== order.id));
+        if (selectedOrder?.id === order.id) setSelectedOrder(null);
+      } else {
+        toast.error(data.message || 'Failed to delete order');
+      }
+    } catch {
+      toast.error('Failed to delete order');
+    } finally {
+      setDeletingId(null);
+      setConfirmDelete(null);
     }
   };
 
@@ -195,9 +221,24 @@ export default function OrdersPage() {
                         <span className="text-sm text-gray-500">{formatDateTime(order.created_at)}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmDelete(order)}
+                            disabled={deletingId === order.id}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            {deletingId === order.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -224,6 +265,33 @@ export default function OrdersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Delete Order" size="sm">
+        {confirmDelete && (
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto">
+              <Trash2 className="h-6 w-6 text-red-600" />
+            </div>
+            <p className="text-center text-gray-700">
+              Are you sure you want to permanently delete order <strong>{confirmDelete.order_number}</strong>?
+              This will remove it from all accounts (customer, vendor, delivery).
+            </p>
+            <p className="text-center text-sm text-red-600 font-medium">This action cannot be undone.</p>
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+              <Button
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => handleDeleteOrder(confirmDelete)}
+                disabled={!!deletingId}
+              >
+                {deletingId ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* Order Detail Modal */}
       <Modal isOpen={!!selectedOrder} onClose={() => setSelectedOrder(null)} title={`Order ${selectedOrder?.order_number}`} size="lg">
