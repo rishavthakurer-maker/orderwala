@@ -21,7 +21,7 @@ interface Product {
   images: string[];
   is_veg: boolean;
   average_rating: number;
-  total_reviews: number;
+  total_ratings: number;
   stock: number;
   highlights?: string[];
   nutritional_info?: Record<string, string>;
@@ -31,10 +31,10 @@ interface Product {
 
 interface Review {
   id: string;
-  user_name: string;
+  user?: { id: string; name: string; image?: string } | null;
   rating: number;
   comment: string;
-  created_at: string;
+  createdAt: string;
 }
 
 interface RelatedProduct {
@@ -83,7 +83,7 @@ export default function ProductDetailPage() {
           const revData = await revRes.json();
           if (revData.success && revData.data) {
             setReviews(revData.data.reviews || []);
-            setRatingDist(revData.data.ratingDistribution || {});
+            setRatingDist(revData.data.summary?.distribution || {});
           }
           if (session?.user) {
             const favRes = await fetch('/api/favorites');
@@ -246,7 +246,7 @@ export default function ProductDetailPage() {
                   <Star className="h-4 w-4 fill-current" />
                   <span className="font-medium">{product.average_rating || 0}</span>
                 </div>
-                <span className="text-gray-500">{product.total_reviews || 0} Reviews</span>
+                <span className="text-gray-500">{product.total_ratings || 0} Reviews</span>
               </div>
             </div>
 
@@ -330,7 +330,7 @@ export default function ProductDetailPage() {
               {[
                 { id: 'description', label: 'Description' },
                 { id: 'nutrition', label: 'Nutritional Info' },
-                { id: 'reviews', label: `Reviews (${product.total_reviews || 0})` },
+                { id: 'reviews', label: `Reviews (${product.total_ratings || 0})` },
               ].map((tab) => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)} className={`py-4 border-b-2 transition-colors ${activeTab === tab.id ? 'border-primary-600 text-primary-600 font-medium' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
                   {tab.label}
@@ -355,12 +355,12 @@ export default function ProductDetailPage() {
                     <div className="flex items-center justify-center gap-1 mt-2">
                       {Array.from({ length: 5 }).map((_, i) => (<Star key={i} className={`h-5 w-5 ${i < Math.floor(product.average_rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />))}
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">{product.total_reviews || 0} reviews</p>
+                    <p className="text-sm text-gray-500 mt-1">{product.total_ratings || 0} reviews</p>
                   </div>
                   <div className="flex-1">
                     {[5,4,3,2,1].map((star) => {
                       const count = ratingDist[star] || 0;
-                      const total = product.total_reviews || 1;
+                      const total = product.total_ratings || 1;
                       const pct = Math.round((count / total) * 100);
                       return (<div key={star} className="flex items-center gap-2 mb-1"><span className="text-sm w-3">{star}</span><Star className="h-4 w-4 text-yellow-400 fill-current" /><div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden"><DynamicBar className="h-full bg-yellow-400" width={`${pct}%`} /></div><span className="text-xs text-gray-500 w-8">{count}</span></div>);
                     })}
@@ -369,7 +369,7 @@ export default function ProductDetailPage() {
                 {reviews.length > 0 ? (
                   <div className="space-y-4">
                     {reviews.map((review) => (
-                      <Card key={review.id}><CardContent className="p-4"><div className="flex items-start justify-between mb-2"><div><p className="font-medium">{review.user_name || 'Anonymous'}</p><div className="flex items-center gap-1 mt-1">{Array.from({ length: 5 }).map((_, i) => (<Star key={i} className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />))}</div></div><span className="text-sm text-gray-500">{new Date(review.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div><p className="text-gray-600">{review.comment}</p></CardContent></Card>
+                      <Card key={review.id}><CardContent className="p-4"><div className="flex items-start justify-between mb-2"><div><p className="font-medium">{review.user?.name || 'Anonymous'}</p><div className="flex items-center gap-1 mt-1">{Array.from({ length: 5 }).map((_, i) => (<Star key={i} className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />))}</div></div><span className="text-sm text-gray-500">{new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div><p className="text-gray-600">{review.comment}</p></CardContent></Card>
                     ))}
                   </div>
                 ) : (<p className="text-gray-500 text-center py-8">No reviews yet. Be the first to review!</p>)}
