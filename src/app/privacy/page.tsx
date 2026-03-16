@@ -6,7 +6,7 @@ export default function PrivacyPolicyPage() {
       <Header />
       <main className="container mx-auto px-4 py-8 pb-24 max-w-3xl">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
-        <div className="bg-white rounded-xl p-6 shadow-sm space-y-6 text-gray-600 text-sm leading-relaxed">
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm space-y-6 text-gray-600 text-sm leading-relaxed">
           <p className="text-xs text-gray-400">Last updated: February 2026</p>
 
           <section>

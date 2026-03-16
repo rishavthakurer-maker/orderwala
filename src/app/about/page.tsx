@@ -5,10 +5,10 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="container mx-auto px-4 py-8 pb-24 max-w-4xl">
+      <main className="container mx-auto px-4 py-6 sm:py-8 pb-24 max-w-3xl">
         {/* Hero */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
             About <span className="text-green-600">Order</span><span className="text-yellow-500">वाला</span>
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">

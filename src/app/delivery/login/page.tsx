@@ -55,22 +55,27 @@ export default function DeliveryLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-cyan-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <span className="text-2xl font-bold text-green-600">Order</span>
-            <span className="text-2xl font-bold text-yellow-500">वाला</span>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+              <span className="text-white font-extrabold">O</span>
+            </div>
+            <div>
+              <span className="text-2xl font-extrabold text-gray-900">Order</span>
+              <span className="text-2xl font-extrabold text-yellow-500">वाला</span>
+            </div>
           </Link>
-          <div className="mx-auto mb-4 h-16 w-16 bg-blue-500 rounded-2xl flex items-center justify-center">
+          <div className="mx-auto mb-4 h-16 w-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
             <Bike className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Delivery Partner Login</h1>
-          <p className="text-gray-500 mt-1">Access your delivery dashboard</p>
+          <h1 className="text-2xl font-extrabold text-gray-900">Delivery Partner Login</h1>
+          <p className="text-gray-500 mt-1 text-sm">Access your delivery dashboard</p>
         </div>
 
-        <Card className="p-6">
+        <Card className="p-6 sm:p-8 shadow-lg border-0 rounded-2xl">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>

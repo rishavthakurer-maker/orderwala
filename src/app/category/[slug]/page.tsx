@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Star, Plus, Grid, List } from 'lucide-react';
+import { Search, Star, Plus, Grid, List, SlidersHorizontal, X } from 'lucide-react';
 import { Card, CardContent, Button, Input, Badge, Skeleton } from '@/components/ui';
 import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
@@ -60,6 +60,7 @@ export default function CategoryPage() {
   const [sortBy, setSortBy] = useState('relevance');
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   
   const addItem = useCartStore((state) => state.addItem);
 
@@ -141,11 +142,25 @@ export default function CategoryPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
+          {/* Mobile Filter Toggle */}
+          <button
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className="lg:hidden flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 active:scale-[0.98] transition-transform"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {showMobileFilters ? 'Hide Filters' : 'Show Filters'}
+          </button>
+
           {/* Sidebar Filters */}
-          <div className="lg:w-64 shrink-0">
-            <Card className="sticky top-4">
+          <div className={`lg:w-64 shrink-0 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
+            <Card className="lg:sticky lg:top-4">
               <CardContent className="p-4">
-                <h3 className="font-bold mb-4">Filters</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold">Filters</h3>
+                  <button onClick={() => setShowMobileFilters(false)} className="lg:hidden p-1 rounded-lg hover:bg-gray-100">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
 
                 {/* Categories */}
                 <div className="mb-6">

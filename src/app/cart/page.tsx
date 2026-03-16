@@ -159,15 +159,15 @@ export default function CartPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => updateQuantity(item.productId, item.quantity - 1, item.variant)}
-                          className="h-8 w-8 rounded-lg border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                          className="h-9 w-9 rounded-xl border border-gray-300 flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
                           aria-label="Decrease quantity"
                         >
                           <Minus className="h-4 w-4" />
                         </button>
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
+                        <span className="w-8 text-center font-semibold">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variant)}
-                          className="h-8 w-8 rounded-lg bg-green-600 text-white flex items-center justify-center hover:bg-green-700 transition-colors"
+                          className="h-9 w-9 rounded-xl bg-green-600 text-white flex items-center justify-center hover:bg-green-700 active:scale-95 transition-all"
                           aria-label="Increase quantity"
                         >
                           <Plus className="h-4 w-4" />
@@ -191,7 +191,7 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-4">
+            <Card className="p-6 lg:sticky lg:top-4">
               <h2 className="font-semibold text-lg mb-4">Order Summary</h2>
 
               {/* Promo Code */}

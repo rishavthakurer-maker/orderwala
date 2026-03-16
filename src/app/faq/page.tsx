@@ -62,10 +62,10 @@ export default function FAQPage() {
         <div className="space-y-6">
           {faqs.map((section) => (
             <div key={section.category} className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 bg-gray-50 border-b">
+              <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b">
                 <h2 className="font-semibold text-gray-900">{section.category}</h2>
               </div>
-              <div className="px-6">
+              <div className="px-4 sm:px-6">
                 {section.items.map((item) => (
                   <FAQItem key={item.q} q={item.q} a={item.a} />
                 ))}

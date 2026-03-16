@@ -117,9 +117,18 @@ input[type="number"] {
 
 /* Mobile bottom nav padding */
 @media (max-width: 1023px) {
-  main {
-    padding-bottom: 80px;
+  main, .main-content {
+    padding-bottom: 88px;
   }
+}
+
+/* Mobile touch optimizations */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, [role="button"] {
+  touch-action: manipulation;
 }
 
 /* Glass Effect Utility */

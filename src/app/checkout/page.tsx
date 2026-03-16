@@ -381,7 +381,7 @@ export default function CheckoutPage() {
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5 text-primary-600" />Delivery Time</CardTitle></CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {deliverySlots.map((slot) => (
                     <button key={slot.id} onClick={() => { setSelectedSlot(slot); if (slot.id === '3') setShowScheduleModal(true); }} className={`p-4 border rounded-lg text-center transition-colors ${selectedSlot.id === slot.id ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300'}`}>
                       <p className="font-medium">{slot.label}</p>

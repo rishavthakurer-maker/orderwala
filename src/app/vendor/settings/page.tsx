@@ -241,7 +241,7 @@ export default function VendorSettingsPage() {
       <Card>
         <CardHeader><CardTitle>Delivery Settings</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Radius (km)</label>
               <Input type="number" value={deliveryRadius} onChange={(e) => setDeliveryRadius(e.target.value)} />
@@ -282,7 +282,7 @@ export default function VendorSettingsPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
             <Input value={street} onChange={(e) => setStreet(e.target.value)} />
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} />

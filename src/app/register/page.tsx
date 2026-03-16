@@ -84,18 +84,23 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-3xl font-bold text-green-600">Order</span>
-            <span className="text-3xl font-bold text-yellow-500">वाला</span>
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-200">
+              <span className="text-white font-extrabold text-xl">O</span>
+            </div>
+            <div>
+              <span className="text-3xl font-extrabold text-gray-900">Order</span>
+              <span className="text-3xl font-extrabold text-yellow-500">वाला</span>
+            </div>
           </Link>
-          <p className="text-gray-500 mt-2">Create your account</p>
+          <p className="text-gray-500 mt-3 text-sm">Create your account to get started</p>
         </div>
 
-        <Card className="p-6">
+        <Card className="p-6 sm:p-8 shadow-lg border-0 rounded-2xl">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
               label="Full Name"

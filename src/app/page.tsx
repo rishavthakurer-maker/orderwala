@@ -146,10 +146,10 @@ export default function HomePage() {
                         <span className="h-1.5 w-1.5 rounded-full bg-green-300 animate-pulse" />
                         Order Now
                       </span>
-                      <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-3 text-white leading-tight drop-shadow-lg">
+                      <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-2 sm:mb-3 text-white leading-tight drop-shadow-lg">
                         {banner.title}
                       </h1>
-                      <p className="text-lg md:text-xl mb-6 text-white/90 font-medium">
+                      <p className="text-base sm:text-lg md:text-xl mb-4 sm:mb-6 text-white/90 font-medium">
                         {banner.subtitle}
                       </p>
                       <Link href="/categories">
@@ -180,37 +180,37 @@ export default function HomePage() {
         {/* Features */}
         <section className="bg-white py-8 border-b border-gray-100">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-100 to-emerald-50 shadow-sm">
-                  <Truck className="h-6 w-6 text-green-600" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+              <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-100 to-emerald-50 shadow-sm">
+                  <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-gray-900">Fast Delivery</p>
                   <p className="text-xs text-gray-500">Within 30 mins</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-50 shadow-sm">
-                  <Shield className="h-6 w-6 text-blue-600" />
+              <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-50 shadow-sm">
+                  <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-gray-900">Quality Assured</p>
                   <p className="text-xs text-gray-500">100% Fresh</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-100 to-violet-50 shadow-sm">
-                  <Percent className="h-6 w-6 text-purple-600" />
+              <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-100 to-violet-50 shadow-sm">
+                  <Percent className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-gray-900">Best Prices</p>
                   <p className="text-xs text-gray-500">Guaranteed</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 shadow-sm">
-                  <Headphones className="h-6 w-6 text-orange-600" />
+              <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 shadow-sm">
+                  <Headphones className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-gray-900">24/7 Support</p>
@@ -226,8 +226,8 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Shop by Category</h2>
-                <p className="text-sm text-gray-500 mt-1">Browse your favorite categories</p>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900">Shop by Category</h2>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">Browse your favorite categories</p>
               </div>
               <Link href="/categories" className="text-green-600 text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all duration-200 bg-green-50 px-4 py-2 rounded-xl hover:bg-green-100">
                 View All <ChevronRight className="h-4 w-4" />
@@ -235,20 +235,20 @@ export default function HomePage() {
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-4">
                 {[...Array(8)].map((_, i) => (
                   <CategoryCardSkeleton key={i} />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-4 md:grid-cols-8 gap-5">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-4 sm:gap-5">
                 {categories.slice(0, 8).map((category) => (
                   <Link
                     key={category._id}
                     href={`/category/${category.slug}`}
                     className="flex flex-col items-center group"
                   >
-                    <div className="relative mb-3 h-18 w-18 md:h-22 md:w-22 overflow-hidden rounded-2xl border-2 border-gray-100 group-hover:border-green-400 group-hover:shadow-lg group-hover:shadow-green-100 transition-all duration-300 group-hover:scale-105">
+                    <div className="relative mb-2 sm:mb-3 h-16 w-16 sm:h-20 sm:w-20 md:h-22 md:w-22 overflow-hidden rounded-2xl border-2 border-gray-100 group-hover:border-green-400 group-hover:shadow-lg group-hover:shadow-green-100 transition-all duration-300 group-hover:scale-105 active:scale-95">
                       {category.image ? (
                         <img
                           src={category.image}
@@ -276,8 +276,8 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Best Sellers</h2>
-                <p className="text-sm text-gray-500 mt-1">Most loved products by our customers</p>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900">Best Sellers</h2>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">Most loved products by our customers</p>
               </div>
               <Link href="/categories" className="text-green-600 text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all duration-200 bg-green-50 px-4 py-2 rounded-xl hover:bg-green-100">
                 View All <ChevronRight className="h-4 w-4" />
@@ -293,7 +293,7 @@ export default function HomePage() {
             ) : featuredProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
                 {featuredProducts.slice(0, 12).map((product) => (
-                  <div key={product._id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 group hover:shadow-lg hover:shadow-green-100/50 hover:-translate-y-1 transition-all duration-300">
+                  <div key={product._id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 group hover:shadow-lg hover:shadow-green-100/50 hover:-translate-y-1 transition-all duration-300 active:scale-[0.98]">
                     <Link href={`/product/${product._id}`}>
                       <div className="relative aspect-square overflow-hidden">
                         {product.images?.[0] ? (
@@ -372,8 +372,8 @@ export default function HomePage() {
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Popular Stores</h2>
-                  <p className="text-sm text-gray-500 mt-1">Top rated stores near you</p>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900">Popular Stores</h2>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Top rated stores near you</p>
                 </div>
               </div>
 

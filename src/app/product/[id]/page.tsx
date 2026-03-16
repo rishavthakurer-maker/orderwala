@@ -294,7 +294,7 @@ export default function ProductDetailPage() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                 <Truck className="h-5 w-5 text-primary-600" />
                 <div><p className="text-xs text-gray-500">Delivery</p><p className="text-sm font-medium">15-30 mins</p></div>

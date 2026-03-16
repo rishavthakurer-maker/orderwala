@@ -116,18 +116,18 @@ export default function AccountPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-6">
-            <div className="bg-white/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold">{orderCount}</p>
-              <p className="text-sm text-primary-100">Orders</p>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-6">
+            <div className="bg-white/10 rounded-xl p-3 sm:p-4 text-center">
+              <p className="text-lg sm:text-2xl font-bold">{orderCount}</p>
+              <p className="text-xs sm:text-sm text-primary-100">Orders</p>
             </div>
-            <div className="bg-white/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold">{formatPrice(walletBalance)}</p>
-              <p className="text-sm text-primary-100">Wallet</p>
+            <div className="bg-white/10 rounded-xl p-3 sm:p-4 text-center">
+              <p className="text-lg sm:text-2xl font-bold truncate">{formatPrice(walletBalance)}</p>
+              <p className="text-xs sm:text-sm text-primary-100">Wallet</p>
             </div>
-            <div className="bg-white/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold">0</p>
-              <p className="text-sm text-primary-100">Rewards</p>
+            <div className="bg-white/10 rounded-xl p-3 sm:p-4 text-center">
+              <p className="text-lg sm:text-2xl font-bold">0</p>
+              <p className="text-xs sm:text-sm text-primary-100">Rewards</p>
             </div>
           </div>
         </div>

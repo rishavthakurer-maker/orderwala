@@ -103,11 +103,11 @@ export default function DeliveryHistoryPage() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <Package className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold">{total || totalDeliveries}</p>
+            <Package className="h-7 w-7 sm:h-8 sm:w-8 text-blue-500 mx-auto mb-2" />
+            <p className="text-xl sm:text-2xl font-bold">{total || totalDeliveries}</p>
             <p className="text-sm text-gray-500">Total Deliveries</p>
           </CardContent>
         </Card>

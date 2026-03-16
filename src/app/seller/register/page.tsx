@@ -100,19 +100,24 @@ export default function SellerRegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <span className="text-2xl font-bold text-green-600">Order</span>
-            <span className="text-2xl font-bold text-yellow-500">वाला</span>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+              <span className="text-white font-extrabold">O</span>
+            </div>
+            <div>
+              <span className="text-2xl font-extrabold text-gray-900">Order</span>
+              <span className="text-2xl font-extrabold text-yellow-500">वाला</span>
+            </div>
           </Link>
-          <div className="mx-auto mb-4 h-16 w-16 bg-orange-500 rounded-2xl flex items-center justify-center">
+          <div className="mx-auto mb-4 h-16 w-16 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
             <Store className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Become a Seller</h1>
-          <p className="text-gray-500 mt-1">Start selling on OrderWala today</p>
+          <h1 className="text-2xl font-extrabold text-gray-900">Become a Seller</h1>
+          <p className="text-gray-500 mt-1 text-sm">Start selling on OrderWala today</p>
         </div>
 
         {/* Progress Steps */}
@@ -128,7 +133,7 @@ export default function SellerRegisterPage() {
           </div>
         </div>
 
-        <Card className="p-6">
+        <Card className="p-6 sm:p-8 shadow-lg border-0 rounded-2xl">
           {step === 1 ? (
             <form onSubmit={handleStep1} className="space-y-4">
               <h2 className="text-lg font-semibold mb-2">Account Details</h2>
