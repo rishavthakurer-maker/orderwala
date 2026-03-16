@@ -102,53 +102,62 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-white">
+    <header className="sticky top-0 z-40 w-full border-b border-gray-100 bg-white/80 backdrop-blur-xl">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center">
-              <span className="text-2xl font-bold text-green-600">Order</span>
-              <span className="text-2xl font-bold text-yellow-500">वाला</span>
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-0.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-md shadow-green-200">
+                <span className="text-lg font-black text-white">O</span>
+              </div>
+              <div className="ml-1.5">
+                <span className="text-xl font-extrabold tracking-tight text-gray-900">Order</span>
+                <span className="text-xl font-extrabold tracking-tight text-yellow-500">वाला</span>
+              </div>
             </div>
           </Link>
 
           {/* Location Picker - Desktop */}
-          <button onClick={() => router.push('/location')} className="hidden lg:flex items-center gap-2 rounded-lg border px-3 py-2 hover:bg-gray-50">
-            <MapPin className="h-4 w-4 text-green-600" />
+          <button onClick={() => router.push('/location')} className="hidden lg:flex items-center gap-2.5 rounded-xl border border-gray-200 px-3.5 py-2 hover:border-green-300 hover:bg-green-50/50 transition-all duration-200 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 group-hover:bg-green-200 transition-colors">
+              <MapPin className="h-4 w-4 text-green-600" />
+            </div>
             <div className="text-left">
-              <p className="text-xs text-gray-500">Deliver to</p>
-              <p className="text-sm font-medium truncate max-w-50">
+              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Deliver to</p>
+              <p className="text-sm font-semibold text-gray-800 truncate max-w-40">
                 {location?.address || 'Select Location'}
               </p>
             </div>
-            <ChevronDown className="h-4 w-4 text-gray-400" />
+            <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-green-500 transition-colors" />
           </button>
 
           {/* Search Bar - Desktop */}
-          <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-lg mx-6">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-xl mx-6">
+            <div className="relative w-full group">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for groceries, restaurants, and more..."
-                className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-10 pr-4 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50/80 py-2.5 pl-11 pr-4 text-sm focus:border-green-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-200 placeholder:text-gray-400"
               />
             </div>
           </form>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-6">
-            <nav className="flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-2">
+            <nav className="flex items-center gap-1">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'text-sm font-medium transition-colors hover:text-green-600',
-                    pathname === item.href ? 'text-green-600' : 'text-gray-600'
+                    'text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200',
+                    pathname === item.href 
+                      ? 'text-green-700 bg-green-50' 
+                      : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
                   )}
                 >
                   {item.name}
@@ -157,10 +166,10 @@ export function Header() {
             </nav>
 
             {/* Cart */}
-            <Link href="/cart" className="relative">
-              <ShoppingCart className="h-6 w-6 text-gray-600 hover:text-green-600" />
+            <Link href="/cart" className="relative p-2.5 rounded-xl hover:bg-gray-50 transition-colors group">
+              <ShoppingCart className="h-5 w-5 text-gray-600 group-hover:text-green-600 transition-colors" />
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs font-medium text-white">
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-[10px] font-bold text-white shadow-lg shadow-green-200 animate-scale-in">
                   {cartCount}
                 </span>
               )}
@@ -171,84 +180,93 @@ export function Header() {
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 rounded-lg border px-3 py-2 hover:bg-gray-50"
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 hover:border-green-300 hover:bg-green-50/50 transition-all duration-200"
                 >
-                  <User className="h-5 w-5" />
-                  <span className="text-sm font-medium">{session.user?.name?.split(' ')[0]}</span>
-                  <ChevronDown className="h-4 w-4" />
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white text-xs font-bold">
+                    {session.user?.name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{session.user?.name?.split(' ')[0]}</span>
+                  <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform duration-200", isUserMenuOpen && "rotate-180")} />
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border bg-white py-2 shadow-lg">
-                    <Link
-                      href="/account"
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <User className="h-4 w-4" />
-                      Profile
-                    </Link>
-                    <Link
-                      href="/account"
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <Package className="h-4 w-4" />
-                      My Orders
-                    </Link>
-                    <Link
-                      href="/favorites"
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <Heart className="h-4 w-4" />
-                      Favorites
-                    </Link>
-                    <Link
-                      href="/account"
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <Wallet className="h-4 w-4" />
-                      Wallet
-                    </Link>
-                    <hr className="my-2" />
-                    <button
-                      onClick={() => signOut()}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </button>
+                  <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-gray-100 bg-white py-2 shadow-hover animate-scale-in">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-gray-900">{session.user?.name}</p>
+                      <p className="text-xs text-gray-500">{session.user?.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link
+                        href="/account"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <User className="h-4 w-4 text-gray-400" />
+                        Profile
+                      </Link>
+                      <Link
+                        href="/account"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <Package className="h-4 w-4 text-gray-400" />
+                        My Orders
+                      </Link>
+                      <Link
+                        href="/favorites"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <Heart className="h-4 w-4 text-gray-400" />
+                        Favorites
+                      </Link>
+                      <Link
+                        href="/account"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <Wallet className="h-4 w-4 text-gray-400" />
+                        Wallet
+                      </Link>
+                    </div>
+                    <div className="border-t border-gray-100 pt-1">
+                      <button
+                        onClick={() => signOut()}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
               <Link href="/login">
-                <Button size="sm">Login</Button>
+                <Button size="sm" className="rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md shadow-green-200 px-5">Login</Button>
               </Link>
             )}
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden p-2"
+            className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
         {/* Mobile Search */}
         <form onSubmit={handleSearch} className="lg:hidden pb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <div className="relative group">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search..."
-              className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-10 pr-4 text-sm focus:border-green-500 focus:outline-none"
+              placeholder="Search for groceries..."
+              className="w-full rounded-xl border border-gray-200 bg-gray-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-green-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-200"
             />
           </div>
         </form>
@@ -256,29 +274,31 @@ export function Header() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="lg:hidden border-t bg-white">
+        <div className="lg:hidden border-t border-gray-100 bg-white animate-fade-in">
           <div className="container mx-auto px-4 py-4">
             {/* Location */}
-            <button onClick={() => { setIsMenuOpen(false); router.push('/location'); }} className="flex items-center gap-2 w-full rounded-lg border p-3 mb-4 hover:bg-gray-50">
-              <MapPin className="h-5 w-5 text-green-600" />
+            <button onClick={() => { setIsMenuOpen(false); router.push('/location'); }} className="flex items-center gap-3 w-full rounded-xl border border-gray-200 p-3.5 mb-4 hover:border-green-300 hover:bg-green-50/50 transition-all duration-200">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100">
+                <MapPin className="h-4 w-4 text-green-600" />
+              </div>
               <div className="text-left flex-1">
-                <p className="text-xs text-gray-500">Deliver to</p>
-                <p className="text-sm font-medium truncate">
+                <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Deliver to</p>
+                <p className="text-sm font-semibold text-gray-800 truncate">
                   {location?.address || 'Select Location'}
                 </p>
               </div>
             </button>
 
             {/* Navigation */}
-            <nav className="space-y-2">
+            <nav className="space-y-1">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'block rounded-lg px-3 py-2 text-sm font-medium',
+                    'block rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200',
                     pathname === item.href
-                      ? 'bg-green-50 text-green-600'
+                      ? 'bg-green-50 text-green-700'
                       : 'text-gray-600 hover:bg-gray-50'
                   )}
                   onClick={() => setIsMenuOpen(false)}
@@ -288,32 +308,32 @@ export function Header() {
               ))}
             </nav>
 
-            <hr className="my-4" />
+            <hr className="my-4 border-gray-100" />
 
             {session ? (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Link
                   href="/account"
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
+                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <User className="h-4 w-4" />
+                  <User className="h-4 w-4 text-gray-400" />
                   Profile
                 </Link>
                 <Link
                   href="/account"
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
+                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <Package className="h-4 w-4" />
+                  <Package className="h-4 w-4 text-gray-400" />
                   My Orders
                 </Link>
                 <Link
                   href="/cart"
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
+                  className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  <ShoppingCart className="h-4 w-4 text-gray-400" />
                   Cart ({cartCount})
                 </Link>
                 <button
@@ -321,7 +341,7 @@ export function Header() {
                     signOut();
                     setIsMenuOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
                   Logout
@@ -329,7 +349,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full">Login</Button>
+                <Button className="w-full rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md shadow-green-200">Login</Button>
               </Link>
             )}
           </div>

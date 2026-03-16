@@ -20,33 +20,45 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white lg:hidden">
-      <div className="flex items-center justify-around py-2">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href;
+    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+      <div className="mx-3 mb-3 rounded-2xl border border-gray-200/60 bg-white/90 backdrop-blur-xl shadow-elegant">
+        <div className="flex items-center justify-around py-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                'flex flex-col items-center gap-1 px-3 py-1',
-                isActive ? 'text-green-600' : 'text-gray-500'
-              )}
-            >
-              <div className="relative">
-                <Icon className="h-5 w-5" />
-                {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-[10px] font-medium text-white">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200',
+                  isActive 
+                    ? 'text-green-600' 
+                    : 'text-gray-400 hover:text-gray-600'
                 )}
-              </div>
-              <span className="text-[10px] font-medium">{item.name}</span>
-            </Link>
-          );
-        })}
+              >
+                <div className="relative">
+                  <div className={cn(
+                    'p-1.5 rounded-xl transition-all duration-200',
+                    isActive && 'bg-green-100'
+                  )}>
+                    <Icon className={cn('h-5 w-5 transition-all duration-200', isActive && 'scale-110')} />
+                  </div>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="absolute -right-1.5 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-[9px] font-bold text-white shadow-lg shadow-green-200 ring-2 ring-white">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
+                </div>
+                <span className={cn(
+                  'text-[10px] font-semibold transition-all duration-200',
+                  isActive ? 'text-green-700' : ''
+                )}>{item.name}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
