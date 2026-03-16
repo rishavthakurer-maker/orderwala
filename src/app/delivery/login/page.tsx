@@ -55,12 +55,12 @@ export default function DeliveryLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
               <span className="text-white font-extrabold">O</span>
             </div>
             <div>
@@ -68,7 +68,7 @@ export default function DeliveryLoginPage() {
               <span className="text-2xl font-extrabold text-yellow-500">वाला</span>
             </div>
           </Link>
-          <div className="mx-auto mb-4 h-16 w-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+          <div className="mx-auto mb-4 h-16 w-16 bg-linear-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
             <Bike className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-extrabold text-gray-900">Delivery Partner Login</h1>

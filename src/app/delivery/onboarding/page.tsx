@@ -219,7 +219,7 @@ export default function DeliveryOnboardingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
@@ -522,6 +522,7 @@ export default function DeliveryOnboardingPage() {
                 type="range"
                 min="1"
                 max="20"
+                title="Delivery radius"
                 value={areaRadius}
                 onChange={e => setAreaRadius(parseInt(e.target.value))}
                 className="w-full accent-blue-600"

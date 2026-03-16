@@ -108,7 +108,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="flex items-center gap-0.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-md shadow-green-200">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-green-500 to-green-600 shadow-md shadow-green-200">
                 <span className="text-lg font-black text-white">O</span>
               </div>
               <div className="ml-1.5">
@@ -182,7 +182,7 @@ export function Header() {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 hover:border-green-300 hover:bg-green-50/50 transition-all duration-200"
                 >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white text-xs font-bold">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-linear-to-br from-green-500 to-emerald-600 text-white text-xs font-bold">
                     {session.user?.name?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <span className="text-sm font-medium text-gray-700">{session.user?.name?.split(' ')[0]}</span>
@@ -243,7 +243,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/login">
-                <Button size="sm" className="rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md shadow-green-200 px-5">Login</Button>
+                <Button size="sm" className="rounded-xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md shadow-green-200 px-5">Login</Button>
               </Link>
             )}
           </div>
@@ -349,7 +349,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md shadow-green-200">Login</Button>
+                <Button className="w-full rounded-xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md shadow-green-200">Login</Button>
               </Link>
             )}
           </div>

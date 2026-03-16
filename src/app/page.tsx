@@ -124,7 +124,7 @@ export default function HomePage() {
       <main>
         {/* Hero Banner */}
         <section className="relative overflow-hidden">
-          <div className="relative h-56 md:h-80 lg:h-[420px]">
+          <div className="relative h-56 md:h-80 lg:h-105">
             {banners.map((banner, index) => (
               <div
                 key={banner.id}
@@ -132,13 +132,13 @@ export default function HomePage() {
                   index === currentBanner ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
                 }`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-r ${banner.color} opacity-85`} />
+                <div className={`absolute inset-0 bg-linear-to-r ${banner.color} opacity-85`} />
                 <img
                   src={banner.image}
                   alt={banner.title}
                   className="h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-r from-black/30 to-transparent" />
                 <div className="absolute inset-0 flex items-center">
                   <div className="container mx-auto px-4">
                     <div className="max-w-xl animate-fade-in-up">
@@ -182,7 +182,7 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
               <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-100 to-emerald-50 shadow-sm">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-linear-to-br from-green-100 to-emerald-50 shadow-sm">
                   <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
                 <div>
@@ -191,7 +191,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-50 shadow-sm">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-linear-to-br from-blue-100 to-indigo-50 shadow-sm">
                   <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
                 <div>
@@ -200,7 +200,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-100 to-violet-50 shadow-sm">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-linear-to-br from-purple-100 to-violet-50 shadow-sm">
                   <Percent className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                 </div>
                 <div>
@@ -209,7 +209,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 shadow-sm">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-linear-to-br from-orange-100 to-amber-50 shadow-sm">
                   <Headphones className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
                 </div>
                 <div>
@@ -256,7 +256,7 @@ export default function HomePage() {
                           className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="h-full w-full bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
+                        <div className="h-full w-full bg-linear-to-br from-green-50 to-emerald-100 flex items-center justify-center">
                           <span className="text-3xl">{category.icon || '🛒'}</span>
                         </div>
                       )}
@@ -303,12 +303,12 @@ export default function HomePage() {
                             className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="h-full w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+                          <div className="h-full w-full bg-linear-to-br from-gray-50 to-gray-100 flex items-center justify-center">
                             <span className="text-5xl">{product.isVeg ? '🥬' : '🍗'}</span>
                           </div>
                         )}
                         {product.discountPrice && product.discountPrice < product.price && (
-                          <span className="absolute top-2 left-2 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-md">
+                          <span className="absolute top-2 left-2 bg-linear-to-r from-red-500 to-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-md">
                             {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
                           </span>
                         )}
@@ -348,7 +348,7 @@ export default function HomePage() {
                         </div>
                         <button
                           onClick={() => handleAddToCart(product)}
-                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-lg hover:shadow-green-200 hover:scale-110 transition-all duration-200 font-bold"
+                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-r from-green-600 to-emerald-600 text-white hover:shadow-lg hover:shadow-green-200 hover:scale-110 transition-all duration-200 font-bold"
                           aria-label={`Add ${product.name} to cart`}
                         >
                           +
@@ -387,7 +387,7 @@ export default function HomePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   {popularVendors.map((vendor) => (
                     <div key={vendor._id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 group cursor-pointer hover:shadow-lg hover:shadow-green-100/50 hover:-translate-y-1 transition-all duration-300">
-                      <div className="relative h-36 overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50">
+                      <div className="relative h-36 overflow-hidden bg-linear-to-br from-green-50 to-emerald-50">
                         {vendor.logo ? (
                           <img
                             src={vendor.logo}
@@ -399,7 +399,7 @@ export default function HomePage() {
                             <span className="text-6xl">🏪</span>
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
                         <div className="absolute bottom-3 left-3 right-3">
                           <span className="text-xs font-medium text-white/90 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg capitalize">{vendor.category}</span>
                         </div>
@@ -431,7 +431,7 @@ export default function HomePage() {
         )}
 
         {/* Download App CTA */}
-        <section className="py-16 bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 relative overflow-hidden">
+        <section className="py-16 bg-linear-to-br from-green-600 via-emerald-600 to-teal-600 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
             <div className="absolute bottom-10 right-10 w-96 h-96 bg-yellow-300 rounded-full blur-3xl" />

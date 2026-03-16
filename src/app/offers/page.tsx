@@ -71,7 +71,7 @@ export default function OffersPage() {
 
       <main className="container mx-auto px-4 py-6 pb-24 lg:pb-8">
         {/* Hero Banner */}
-        <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 to-green-700 p-6 lg:p-10 text-white">
+        <div className="relative mb-8 overflow-hidden rounded-2xl bg-linear-to-r from-green-600 to-green-700 p-6 lg:p-10 text-white">
           <div className="relative z-10">
             <h1 className="text-2xl lg:text-4xl font-bold mb-2">Offers & Coupons</h1>
             <p className="text-green-100 text-sm lg:text-base max-w-lg">
@@ -111,7 +111,7 @@ export default function OffersPage() {
             {offers.map((offer) => (
               <Card key={offer.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Discount Header */}
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-white">
+                <div className="bg-linear-to-r from-green-500 to-emerald-500 px-6 py-4 text-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {offer.discountType === 'percentage' ? (

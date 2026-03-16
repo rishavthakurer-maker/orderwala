@@ -157,7 +157,7 @@ export default function CategoryPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold">Filters</h3>
-                  <button onClick={() => setShowMobileFilters(false)} className="lg:hidden p-1 rounded-lg hover:bg-gray-100">
+                  <button onClick={() => setShowMobileFilters(false)} className="lg:hidden p-1 rounded-lg hover:bg-gray-100" aria-label="Close filters">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
