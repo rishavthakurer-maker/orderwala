@@ -14,7 +14,11 @@ export const metadata: Metadata = {
   keywords: ["food delivery", "grocery delivery", "vegetables", "fruits", "meat", "restaurants", "Bihar", "Patna"],
   authors: [{ name: "Rahul Kumar" }],
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: "/favicon.png",
   },
   openGraph: {
