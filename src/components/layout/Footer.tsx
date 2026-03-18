@@ -10,13 +10,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center mb-5">
-              <div className="h-10 w-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center mr-2 shadow-lg shadow-green-500/20">
-                <span className="text-white font-extrabold text-lg">O</span>
-              </div>
-              <div>
-                <span className="text-2xl font-extrabold text-white">Order</span>
-                <span className="text-2xl font-extrabold text-yellow-400">वाला</span>
-              </div>
+              <img src="/logo.png" alt="Order Wala" className="h-12 w-auto" />
             </Link>
             <p className="text-sm text-gray-400 mb-5 leading-relaxed">
               Your one-stop destination for fresh groceries, delicious food, and quick delivery at your doorstep.

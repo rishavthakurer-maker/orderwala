@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   description: "Order fresh vegetables, fruits, meat, groceries, and delicious food from local vendors. Fast delivery to your doorstep in Bihar.",
   keywords: ["food delivery", "grocery delivery", "vegetables", "fruits", "meat", "restaurants", "Bihar", "Patna"],
   authors: [{ name: "Rahul Kumar" }],
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
   openGraph: {
     title: "Order Wala - Fresh Groceries & Food Delivery",
     description: "Your one-stop destination for fresh groceries and delicious food delivery.",

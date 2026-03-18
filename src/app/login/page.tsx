@@ -163,14 +163,8 @@ function LoginPageContent() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="h-12 w-12 rounded-2xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-200">
-              <span className="text-white font-extrabold text-xl">O</span>
-            </div>
-            <div>
-              <span className="text-3xl font-extrabold text-gray-900">Order</span>
-              <span className="text-3xl font-extrabold text-yellow-500">वाला</span>
-            </div>
+          <Link href="/">
+            <img src="/logo.png" alt="Order Wala" className="h-14 w-auto mx-auto" />
           </Link>
           <p className="text-gray-500 mt-3 text-sm">Welcome back! Login to your account</p>
         </div>

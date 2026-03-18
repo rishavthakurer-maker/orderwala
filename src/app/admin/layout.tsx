@@ -94,10 +94,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         {/* Logo */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-gray-800">
-          <Link href="/admin/dashboard" className="flex items-center">
-            <span className="text-xl font-bold text-green-500">Order</span>
-            <span className="text-xl font-bold text-yellow-400">वाला</span>
-            <span className="ml-2 text-xs text-gray-400">Admin</span>
+          <Link href="/admin/dashboard" className="flex items-center gap-2">
+            <img src="/logo.png" alt="Order Wala" className="h-8 w-auto" />
+            <span className="text-xs text-gray-400">Admin</span>
           </Link>
           <button
             onClick={() => setIsSidebarOpen(false)}

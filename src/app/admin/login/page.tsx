@@ -48,9 +48,7 @@ export default function AdminLoginPage() {
         <CardContent className="p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
-              <ShoppingBag className="w-8 h-8 text-primary-600" />
-            </div>
+            <img src="/logo.png" alt="Order Wala" className="h-14 w-auto mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
             <p className="text-gray-500 mt-1">Sign in to manage Order Wala</p>
           </div>

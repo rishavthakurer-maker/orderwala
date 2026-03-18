@@ -118,13 +118,8 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
             <Link href="/vendor" className="flex items-center gap-2">
-              <div className="h-10 w-10 bg-orange-500 rounded-lg flex items-center justify-center">
-                <Store className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <span className="font-bold text-gray-900">Seller Panel</span>
-                <p className="text-xs text-gray-500">Order Wala</p>
-              </div>
+              <img src="/logo.png" alt="Order Wala" className="h-9 w-auto" />
+              <span className="text-xs text-gray-500">Seller</span>
             </Link>
             <button className="lg:hidden p-2 hover:bg-gray-100 rounded-lg" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
               <X className="h-5 w-5" />

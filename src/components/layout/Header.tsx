@@ -106,16 +106,8 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-0.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-green-500 to-green-600 shadow-md shadow-green-200">
-                <span className="text-lg font-black text-white">O</span>
-              </div>
-              <div className="ml-1.5">
-                <span className="text-xl font-extrabold tracking-tight text-gray-900">Order</span>
-                <span className="text-xl font-extrabold tracking-tight text-yellow-500">वाला</span>
-              </div>
-            </div>
+          <Link href="/" className="flex items-center shrink-0">
+            <img src="/logo.png" alt="Order Wala" className="h-10 w-auto" />
           </Link>
 
           {/* Location Picker - Desktop */}

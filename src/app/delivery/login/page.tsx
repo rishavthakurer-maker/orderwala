@@ -59,14 +59,8 @@ export default function DeliveryLoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
-              <span className="text-white font-extrabold">O</span>
-            </div>
-            <div>
-              <span className="text-2xl font-extrabold text-gray-900">Order</span>
-              <span className="text-2xl font-extrabold text-yellow-500">वाला</span>
-            </div>
+          <Link href="/" className="inline-block mb-6">
+            <img src="/logo.png" alt="Order Wala" className="h-12 w-auto mx-auto" />
           </Link>
           <div className="mx-auto mb-4 h-16 w-16 bg-linear-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
             <Bike className="h-8 w-8 text-white" />
