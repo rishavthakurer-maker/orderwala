@@ -23,7 +23,7 @@ export default function RefundPolicyPage() {
 
           <section>
             <h2 className="text-base font-semibold text-gray-900 mb-2">2. How to Request a Refund</h2>
-            <p>To request a refund, go to your order details page and contact our support team, or email us at <a href="mailto:support@orderwala.in" className="text-green-600 hover:underline">support@orderwala.in</a> with your order ID and description of the issue. Include photos if applicable.</p>
+            <p>To request a refund, go to your order details page and contact our support team, or email us at <a href="mailto:support@orderwala.in" className="text-orange-600 hover:underline">support@orderwala.in</a> with your order ID and description of the issue. Include photos if applicable.</p>
           </section>
 
           <section>
@@ -53,7 +53,7 @@ export default function RefundPolicyPage() {
 
           <section>
             <h2 className="text-base font-semibold text-gray-900 mb-2">6. Contact</h2>
-            <p>For refund-related queries, email <a href="mailto:support@orderwala.in" className="text-green-600 hover:underline">support@orderwala.in</a> or call +91 98765 43210.</p>
+            <p>For refund-related queries, email <a href="mailto:support@orderwala.in" className="text-orange-600 hover:underline">support@orderwala.in</a> or call +91 98765 43210.</p>
           </section>
         </div>
       </main>

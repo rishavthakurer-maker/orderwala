@@ -192,7 +192,7 @@ export default function PromosPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total Promos</p><p className="text-2xl font-bold">{promos.length}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Active</p><p className="text-2xl font-bold text-green-600">{activeCount}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Active</p><p className="text-2xl font-bold text-orange-600">{activeCount}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Expired</p><p className="text-2xl font-bold text-red-600">{promos.filter(p => isExpired(p)).length}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total Used</p><p className="text-2xl font-bold">{promos.reduce((s, p) => s + (p.used_count || 0), 0)}</p></CardContent></Card>
       </div>
@@ -212,7 +212,7 @@ export default function PromosPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
             </div>
           ) : promos.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -241,7 +241,7 @@ export default function PromosPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-mono font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded">{promo.code}</span>
                           <button onClick={() => handleCopyCode(promo.code)} className="text-gray-400 hover:text-gray-600">
-                            {copiedCode === promo.code ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                            {copiedCode === promo.code ? <Check className="h-4 w-4 text-orange-500" /> : <Copy className="h-4 w-4" />}
                           </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">{promo.description}</p>
@@ -262,7 +262,7 @@ export default function PromosPage() {
                         <span className="text-sm text-gray-500">/{promo.usage_limit}</span>
                         <div className="w-20 bg-gray-200 rounded-full h-1.5 mt-1">
                           <DynamicBar
-                            className="bg-green-500 h-1.5 rounded-full"
+                            className="bg-orange-500 h-1.5 rounded-full"
                             width={`${Math.min(100, ((promo.used_count || 0) / promo.usage_limit) * 100)}%`}
                           />
                         </div>
@@ -275,7 +275,7 @@ export default function PromosPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button onClick={() => handleToggleActive(promo)}>
                           {promo.is_active ? (
-                            <ToggleRight className="h-6 w-6 text-green-500" />
+                            <ToggleRight className="h-6 w-6 text-orange-500" />
                           ) : (
                             <ToggleLeft className="h-6 w-6 text-gray-400" />
                           )}

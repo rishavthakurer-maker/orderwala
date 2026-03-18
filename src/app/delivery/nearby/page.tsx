@@ -252,7 +252,7 @@ export default function NearbyDeliveriesPage() {
                   )}
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-green-600">{formatPrice(order.deliveryEarnings)}</p>
+                  <p className="text-lg font-bold text-orange-600">{formatPrice(order.deliveryEarnings)}</p>
                   <p className="text-xs text-gray-400">Earnings</p>
                 </div>
               </div>
@@ -273,12 +273,12 @@ export default function NearbyDeliveriesPage() {
                 <Navigation className="h-4 w-4 text-gray-300 shrink-0" />
 
                 {/* Delivery */}
-                <div className="flex items-center gap-1.5 flex-1 bg-green-50 rounded-lg p-2">
-                  <div className="h-6 w-6 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-1.5 flex-1 bg-orange-50 rounded-lg p-2">
+                  <div className="h-6 w-6 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
                     <span className="text-xs">🏠</span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs text-green-600 font-medium">DROP</p>
+                    <p className="text-xs text-orange-600 font-medium">DROP</p>
                     <p className="text-xs text-gray-600 truncate">{order.deliveryAddress?.address || order.deliveryAddress?.city || 'Customer'}</p>
                   </div>
                 </div>
@@ -361,14 +361,14 @@ export default function NearbyDeliveriesPage() {
             )}
 
             {/* Delivery */}
-            <div className="p-4 bg-green-50 rounded-lg">
-              <p className="text-xs text-green-600 font-medium uppercase">Deliver To</p>
+            <div className="p-4 bg-orange-50 rounded-lg">
+              <p className="text-xs text-orange-600 font-medium uppercase">Deliver To</p>
               <p className="font-medium text-gray-900 mt-1">{selectedOrder.deliveryAddress?.address || 'Customer address'}</p>
               {selectedOrder.deliveryAddress?.city && (
                 <p className="text-sm text-gray-500">{selectedOrder.deliveryAddress.city} {selectedOrder.deliveryAddress.pincode}</p>
               )}
               {selectedOrder.deliveryDistance !== null && (
-                <p className="text-sm text-green-600 mt-1">{formatDistance(selectedOrder.deliveryDistance)} from vendor</p>
+                <p className="text-sm text-orange-600 mt-1">{formatDistance(selectedOrder.deliveryDistance)} from vendor</p>
               )}
             </div>
 
@@ -402,8 +402,8 @@ export default function NearbyDeliveriesPage() {
                 </div>
               )}
               <div className="flex justify-between text-base font-bold border-t pt-2 mt-2">
-                <span className="text-green-700">Your Earnings</span>
-                <span className="text-green-600">{formatPrice(selectedOrder.deliveryEarnings)}</span>
+                <span className="text-orange-700">Your Earnings</span>
+                <span className="text-orange-600">{formatPrice(selectedOrder.deliveryEarnings)}</span>
               </div>
             </div>
 

@@ -92,7 +92,7 @@ function OrderSuccessContent() {
 
             {address && (
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center"><MapPin className="h-5 w-5 text-green-600" /></div>
+                <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center"><MapPin className="h-5 w-5 text-orange-600" /></div>
                 <div><p className="font-medium">Delivering to</p><p className="text-sm text-gray-500 line-clamp-2">{address}</p></div>
               </div>
             )}

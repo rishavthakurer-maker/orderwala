@@ -111,9 +111,9 @@ export function Header() {
           </Link>
 
           {/* Location Picker - Desktop */}
-          <button onClick={() => router.push('/location')} className="hidden lg:flex items-center gap-2.5 rounded-xl border border-gray-200 px-3.5 py-2 hover:border-green-300 hover:bg-green-50/50 transition-all duration-200 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 group-hover:bg-green-200 transition-colors">
-              <MapPin className="h-4 w-4 text-green-600" />
+          <button onClick={() => router.push('/location')} className="hidden lg:flex items-center gap-2.5 rounded-xl border border-gray-200 px-3.5 py-2 hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 group-hover:bg-orange-200 transition-colors">
+              <MapPin className="h-4 w-4 text-orange-600" />
             </div>
             <div className="text-left">
               <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Deliver to</p>
@@ -121,19 +121,19 @@ export function Header() {
                 {location?.address || 'Select Location'}
               </p>
             </div>
-            <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-green-500 transition-colors" />
+            <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-orange-500 transition-colors" />
           </button>
 
           {/* Search Bar - Desktop */}
           <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-xl mx-6">
             <div className="relative w-full group">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for groceries, restaurants, and more..."
-                className="w-full rounded-xl border border-gray-200 bg-gray-50/80 py-2.5 pl-11 pr-4 text-sm focus:border-green-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-200 placeholder:text-gray-400"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50/80 py-2.5 pl-11 pr-4 text-sm focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-orange-500/10 transition-all duration-200 placeholder:text-gray-400"
               />
             </div>
           </form>
@@ -148,8 +148,8 @@ export function Header() {
                   className={cn(
                     'text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200',
                     pathname === item.href 
-                      ? 'text-green-700 bg-green-50' 
-                      : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
+                      ? 'text-orange-700 bg-orange-50' 
+                      : 'text-gray-600 hover:text-orange-600 hover:bg-gray-50'
                   )}
                 >
                   {item.name}
@@ -159,9 +159,9 @@ export function Header() {
 
             {/* Cart */}
             <Link href="/cart" className="relative p-2.5 rounded-xl hover:bg-gray-50 transition-colors group">
-              <ShoppingCart className="h-5 w-5 text-gray-600 group-hover:text-green-600 transition-colors" />
+              <ShoppingCart className="h-5 w-5 text-gray-600 group-hover:text-orange-600 transition-colors" />
               {cartCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-[10px] font-bold text-white shadow-lg shadow-green-200 animate-scale-in">
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-[10px] font-bold text-white shadow-lg shadow-orange-200 animate-scale-in">
                   {cartCount}
                 </span>
               )}
@@ -172,9 +172,9 @@ export function Header() {
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 hover:border-green-300 hover:bg-green-50/50 transition-all duration-200"
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200"
                 >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-linear-to-br from-green-500 to-emerald-600 text-white text-xs font-bold">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-linear-to-br from-orange-500 to-amber-600 text-white text-xs font-bold">
                     {session.user?.name?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <span className="text-sm font-medium text-gray-700">{session.user?.name?.split(' ')[0]}</span>
@@ -235,7 +235,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/login">
-                <Button size="sm" className="rounded-xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md shadow-green-200 px-5">Login</Button>
+                <Button size="sm" className="rounded-xl bg-linear-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 shadow-md shadow-orange-200 px-5">Login</Button>
               </Link>
             )}
           </div>
@@ -252,13 +252,13 @@ export function Header() {
         {/* Mobile Search */}
         <form onSubmit={handleSearch} className="lg:hidden pb-3">
           <div className="relative group">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for groceries..."
-              className="w-full rounded-xl border border-gray-200 bg-gray-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-green-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all duration-200"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-orange-500/10 transition-all duration-200"
             />
           </div>
         </form>
@@ -269,9 +269,9 @@ export function Header() {
         <div className="lg:hidden border-t border-gray-100 bg-white animate-fade-in">
           <div className="container mx-auto px-4 py-4">
             {/* Location */}
-            <button onClick={() => { setIsMenuOpen(false); router.push('/location'); }} className="flex items-center gap-3 w-full rounded-xl border border-gray-200 p-3.5 mb-4 hover:border-green-300 hover:bg-green-50/50 transition-all duration-200">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100">
-                <MapPin className="h-4 w-4 text-green-600" />
+            <button onClick={() => { setIsMenuOpen(false); router.push('/location'); }} className="flex items-center gap-3 w-full rounded-xl border border-gray-200 p-3.5 mb-4 hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100">
+                <MapPin className="h-4 w-4 text-orange-600" />
               </div>
               <div className="text-left flex-1">
                 <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Deliver to</p>
@@ -290,7 +290,7 @@ export function Header() {
                   className={cn(
                     'block rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200',
                     pathname === item.href
-                      ? 'bg-green-50 text-green-700'
+                      ? 'bg-orange-50 text-orange-700'
                       : 'text-gray-600 hover:bg-gray-50'
                   )}
                   onClick={() => setIsMenuOpen(false)}
@@ -341,7 +341,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full rounded-xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md shadow-green-200">Login</Button>
+                <Button className="w-full rounded-xl bg-linear-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 shadow-md shadow-orange-200">Login</Button>
               </Link>
             )}
           </div>

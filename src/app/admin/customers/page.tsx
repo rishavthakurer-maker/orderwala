@@ -142,7 +142,7 @@ export default function CustomersPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
             </div>
           ) : customers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -181,7 +181,7 @@ export default function CustomersPage() {
                         <p className="text-xs text-gray-500">{customer.email || '-'}</p>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm font-medium ${(customer.wallet_balance || 0) > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                        <span className={`text-sm font-medium ${(customer.wallet_balance || 0) > 0 ? 'text-orange-600' : 'text-gray-500'}`}>
                           {formatPrice(customer.wallet_balance || 0)}
                         </span>
                       </td>
@@ -196,7 +196,7 @@ export default function CustomersPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button onClick={() => handleToggleStatus(customer)}>
                           {customer.is_active ? (
-                            <ToggleRight className="h-6 w-6 text-green-500" />
+                            <ToggleRight className="h-6 w-6 text-orange-500" />
                           ) : (
                             <ToggleLeft className="h-6 w-6 text-gray-400" />
                           )}

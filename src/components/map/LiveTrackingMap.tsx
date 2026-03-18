@@ -151,7 +151,7 @@ export default function LiveTrackingMap({ orderId, deliveryAddress, vendorAddres
           <div className="relative">
             <span className="text-lg">🛵</span>
             {isTracking && (
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-400 rounded-full border-2 border-blue-600 animate-pulse" />
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-orange-400 rounded-full border-2 border-blue-600 animate-pulse" />
             )}
           </div>
           <div>

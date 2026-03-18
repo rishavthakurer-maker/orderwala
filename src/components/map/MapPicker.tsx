@@ -212,7 +212,7 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
           value={searchQuery}
           onChange={(e) => handleSearchInput(e.target.value)}
           placeholder="Search for area, street name..."
-          className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
         />
         {searchQuery && (
           <button onClick={() => { setSearchQuery(''); setSuggestions([]); }} className="absolute right-3 top-1/2 -translate-y-1/2" title="Clear search">
@@ -270,25 +270,25 @@ export function MapPicker({ onLocationSelect, initialLocation, height = '350px' 
           title="Use my current location"
         >
           {geoLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+            <Loader2 className="h-5 w-5 animate-spin text-orange-600" />
           ) : (
-            <Navigation className="h-5 w-5 text-green-600" />
+            <Navigation className="h-5 w-5 text-orange-600" />
           )}
         </button>
 
         {/* Loading overlay */}
         {loading && (
           <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-1000">
-            <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
           </div>
         )}
       </div>
 
       {/* Selected Address Display */}
       {address && (
-        <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <MapPin className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
-          <p className="text-sm text-green-800">{address}</p>
+        <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <MapPin className="h-4 w-4 text-orange-600 mt-0.5 shrink-0" />
+          <p className="text-sm text-orange-800">{address}</p>
         </div>
       )}
     </div>

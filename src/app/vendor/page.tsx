@@ -52,7 +52,7 @@ export default function VendorDashboard() {
   const { stats, recentOrders, lowStock } = data;
 
   const statCards = [
-    { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: IndianRupee, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: IndianRupee, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Total Orders', value: stats.totalOrders, icon: ShoppingBag, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Pending Orders', value: stats.pendingOrders, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Total Products', value: stats.totalProducts, icon: Package, color: 'text-purple-600', bg: 'bg-purple-50' },
@@ -137,7 +137,7 @@ export default function VendorDashboard() {
           <CardContent>
             {lowStock.length === 0 ? (
               <div className="text-center py-8">
-                <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto mb-2" />
+                <CheckCircle2 className="h-10 w-10 text-orange-500 mx-auto mb-2" />
                 <p className="text-gray-500">All products are well stocked!</p>
               </div>
             ) : (
@@ -168,7 +168,7 @@ export default function VendorDashboard() {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4 text-center">
-          <CheckCircle2 className="h-6 w-6 text-green-500 mx-auto mb-1" />
+          <CheckCircle2 className="h-6 w-6 text-orange-500 mx-auto mb-1" />
           <p className="text-2xl font-bold">{stats.completedOrders}</p>
           <p className="text-xs text-gray-500">Completed</p>
         </Card>

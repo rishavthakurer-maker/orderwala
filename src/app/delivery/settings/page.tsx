@@ -340,8 +340,8 @@ export default function DeliverySettingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm text-green-700">Your earnings will be transferred to the account below</p>
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <p className="text-sm text-orange-700">Your earnings will be transferred to the account below</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">

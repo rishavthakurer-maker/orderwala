@@ -242,7 +242,7 @@ export default function ProductDetailPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-3">
-                <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded">
+                <div className="flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded">
                   <Star className="h-4 w-4 fill-current" />
                   <span className="font-medium">{product.average_rating || 0}</span>
                 </div>
@@ -255,7 +255,7 @@ export default function ProductDetailPage() {
               {discount > 0 && (
                 <>
                   <span className="text-xl text-gray-400 line-through">{formatPrice(mrp)}</span>
-                  <span className="text-green-600 font-medium">Save {formatPrice(mrp - salePrice)}</span>
+                  <span className="text-orange-600 font-medium">Save {formatPrice(mrp - salePrice)}</span>
                 </>
               )}
             </div>
@@ -267,7 +267,7 @@ export default function ProductDetailPage() {
                     {product.vendor.logo ? (
                       <img src={product.vendor.logo} alt={product.vendor.store_name} className="h-10 w-10 rounded-full object-cover" />
                     ) : (
-                      <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center"><span className="text-xl"></span></div>
+                      <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center"><span className="text-xl"></span></div>
                     )}
                     <div>
                       <p className="font-medium text-gray-900">{product.vendor.store_name}</p>
@@ -300,7 +300,7 @@ export default function ProductDetailPage() {
                 <div><p className="text-xs text-gray-500">Delivery</p><p className="text-sm font-medium">15-30 mins</p></div>
               </div>
               <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                <ShieldCheck className="h-5 w-5 text-green-600" />
+                <ShieldCheck className="h-5 w-5 text-orange-600" />
                 <div><p className="text-xs text-gray-500">Quality</p><p className="text-sm font-medium">Assured</p></div>
               </div>
               <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">

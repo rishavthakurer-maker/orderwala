@@ -102,7 +102,7 @@ export default function DeliveryLoginPage() {
             </p>
             <p className="text-sm text-gray-400 mt-2">
               Buyer?{' '}
-              <Link href="/login" className="text-green-600 hover:underline">Login as buyer</Link>
+              <Link href="/login" className="text-orange-600 hover:underline">Login as buyer</Link>
             </p>
           </div>
         </Card>

@@ -374,7 +374,7 @@ export default function VendorProductsPage() {
           <div className="flex items-center gap-3">
             <label className="text-sm font-medium text-gray-700">Type:</label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="isVeg" checked={form.isVeg} onChange={() => setForm({ ...form, isVeg: true })} className="text-green-600" />
+              <input type="radio" name="isVeg" checked={form.isVeg} onChange={() => setForm({ ...form, isVeg: true })} className="text-orange-600" />
               <span className="text-sm"> Veg</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">

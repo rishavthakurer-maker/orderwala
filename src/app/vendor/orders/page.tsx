@@ -41,7 +41,7 @@ const statusTabs = [
 ];
 
 const nextAction: Record<string, { status: string; label: string; color: string }> = {
-  pending: { status: 'confirmed', label: 'Accept Order', color: 'bg-green-600 hover:bg-green-700' },
+  pending: { status: 'confirmed', label: 'Accept Order', color: 'bg-orange-600 hover:bg-orange-700' },
   confirmed: { status: 'preparing', label: 'Start Preparing', color: 'bg-blue-600 hover:bg-blue-700' },
   preparing: { status: 'ready', label: 'Mark Ready', color: 'bg-purple-600 hover:bg-purple-700' },
 };
@@ -270,7 +270,7 @@ export default function VendorOrdersPage() {
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span>{formatPrice(selectedOrder.subtotal)}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">Delivery</span><span>{formatPrice(selectedOrder.deliveryCharge)}</span></div>
-                {selectedOrder.discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-{formatPrice(selectedOrder.discount)}</span></div>}
+                {selectedOrder.discount > 0 && <div className="flex justify-between text-orange-600"><span>Discount</span><span>-{formatPrice(selectedOrder.discount)}</span></div>}
                 <hr className="my-2" />
                 <div className="flex justify-between font-bold text-base"><span>Total</span><span>{formatPrice(selectedOrder.total)}</span></div>
                 <p className="text-xs text-gray-500 capitalize">Payment: {selectedOrder.paymentMethod?.replace(/_/g, ' ') || 'COD'}</p>

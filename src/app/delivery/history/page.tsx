@@ -113,7 +113,7 @@ export default function DeliveryHistoryPage() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <TrendingUp className="h-8 w-8 text-green-500 mx-auto mb-2" />
+            <TrendingUp className="h-8 w-8 text-orange-500 mx-auto mb-2" />
             <p className="text-2xl font-bold">{formatPrice(totalEarnings)}</p>
             <p className="text-sm text-gray-500">Earnings</p>
           </CardContent>
@@ -169,7 +169,7 @@ export default function DeliveryHistoryPage() {
                 </div>
                 <div className="text-right ml-4">
                   <p className="text-sm text-gray-500">{order.deliveredAt ? formatDateTime(new Date(order.deliveredAt)) : formatDate(new Date(order.createdAt))}</p>
-                  <p className="text-lg font-bold text-green-600 mt-1">{formatPrice(order.deliveryEarnings)}</p>
+                  <p className="text-lg font-bold text-orange-600 mt-1">{formatPrice(order.deliveryEarnings)}</p>
                   <p className="text-sm text-gray-500">{order.items.length} items</p>
                   <button
                     onClick={(e) => handleDeleteOrder(order.orderId, e)}
@@ -219,9 +219,9 @@ export default function DeliveryHistoryPage() {
               <div className="flex items-center justify-between"><span className="text-gray-500">Items</span><span className="font-medium">{selectedOrder.items.length}</span></div>
             </div>
 
-            <div className="bg-green-50 rounded-lg p-4 space-y-3">
+            <div className="bg-orange-50 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between"><span className="text-gray-500">Order Total</span><span className="font-medium">{formatPrice(selectedOrder.total)}</span></div>
-              <div className="flex items-center justify-between"><span className="text-gray-500">Your Earnings</span><span className="font-bold text-green-600 text-lg">{formatPrice(selectedOrder.deliveryEarnings)}</span></div>
+              <div className="flex items-center justify-between"><span className="text-gray-500">Your Earnings</span><span className="font-bold text-orange-600 text-lg">{formatPrice(selectedOrder.deliveryEarnings)}</span></div>
             </div>
 
             {selectedOrder.deliveredAt && (

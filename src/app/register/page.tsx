@@ -84,7 +84,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -161,11 +161,11 @@ export default function RegisterPage() {
 
             <div className="text-xs text-gray-500">
               By registering, you agree to our{' '}
-              <Link href="/terms" className="text-green-600 hover:underline">
+              <Link href="/terms" className="text-orange-600 hover:underline">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-green-600 hover:underline">
+              <Link href="/privacy" className="text-orange-600 hover:underline">
                 Privacy Policy
               </Link>
             </div>
@@ -217,7 +217,7 @@ export default function RegisterPage() {
         {/* Login Link */}
         <p className="text-center text-sm text-gray-600 mt-6">
           Already have an account?{' '}
-          <Link href="/login" className="text-green-600 font-medium hover:underline">
+          <Link href="/login" className="text-orange-600 font-medium hover:underline">
             Login
           </Link>
         </p>

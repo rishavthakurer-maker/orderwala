@@ -107,8 +107,8 @@ export default function SettingsPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Platform Logo</label>
             <div className="flex items-center gap-4">
-              <div className="h-16 w-16 bg-green-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-green-600">OW</span>
+              <div className="h-16 w-16 bg-orange-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-orange-600">OW</span>
               </div>
               <Button variant="outline">
                 <Upload className="h-4 w-4 mr-2" />
@@ -201,21 +201,21 @@ export default function SettingsPage() {
                 <p className="font-medium">Cash on Delivery (COD)</p>
                 <p className="text-sm text-gray-500">Allow customers to pay cash upon delivery</p>
               </div>
-              <input type="checkbox" checked={settings.codEnabled} onChange={(e) => updateSetting('codEnabled', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-green-600" />
+              <input type="checkbox" checked={settings.codEnabled} onChange={(e) => updateSetting('codEnabled', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-orange-600" />
             </label>
             <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
               <div>
                 <p className="font-medium">Online Payment (Razorpay)</p>
                 <p className="text-sm text-gray-500">Accept UPI, Cards, Net Banking</p>
               </div>
-              <input type="checkbox" checked={settings.onlinePaymentEnabled} onChange={(e) => updateSetting('onlinePaymentEnabled', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-green-600" />
+              <input type="checkbox" checked={settings.onlinePaymentEnabled} onChange={(e) => updateSetting('onlinePaymentEnabled', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-orange-600" />
             </label>
             <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
               <div>
                 <p className="font-medium">Wallet Payment</p>
                 <p className="text-sm text-gray-500">Allow payment from wallet balance</p>
               </div>
-              <input type="checkbox" checked={settings.walletPaymentEnabled} onChange={(e) => updateSetting('walletPaymentEnabled', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-green-600" />
+              <input type="checkbox" checked={settings.walletPaymentEnabled} onChange={(e) => updateSetting('walletPaymentEnabled', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-orange-600" />
             </label>
           </div>
           <div className="flex justify-end">
@@ -331,21 +331,21 @@ export default function SettingsPage() {
                 <p className="font-medium">Order Notifications</p>
                 <p className="text-sm text-gray-500">Send notifications for order updates</p>
               </div>
-              <input type="checkbox" checked={settings.orderNotifications} onChange={(e) => updateSetting('orderNotifications', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-green-600" />
+              <input type="checkbox" checked={settings.orderNotifications} onChange={(e) => updateSetting('orderNotifications', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-orange-600" />
             </label>
             <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
               <div>
                 <p className="font-medium">Promotional Notifications</p>
                 <p className="text-sm text-gray-500">Send promotional offers to customers</p>
               </div>
-              <input type="checkbox" checked={settings.promoNotifications} onChange={(e) => updateSetting('promoNotifications', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-green-600" />
+              <input type="checkbox" checked={settings.promoNotifications} onChange={(e) => updateSetting('promoNotifications', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-orange-600" />
             </label>
             <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
               <div>
                 <p className="font-medium">SMS Notifications</p>
                 <p className="text-sm text-gray-500">Send SMS for important updates</p>
               </div>
-              <input type="checkbox" checked={settings.smsNotifications} onChange={(e) => updateSetting('smsNotifications', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-green-600" />
+              <input type="checkbox" checked={settings.smsNotifications} onChange={(e) => updateSetting('smsNotifications', e.target.checked)} className="h-5 w-5 rounded border-gray-300 text-orange-600" />
             </label>
           </div>
           <div className="flex justify-end">
@@ -381,7 +381,7 @@ export default function SettingsPage() {
             />
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={settings.is24x7} onChange={(e) => updateSetting('is24x7', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-green-600" />
+            <input type="checkbox" checked={settings.is24x7} onChange={(e) => updateSetting('is24x7', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-orange-600" />
             <span className="text-sm text-gray-700">24/7 Operations</span>
           </label>
           <div className="flex justify-end">

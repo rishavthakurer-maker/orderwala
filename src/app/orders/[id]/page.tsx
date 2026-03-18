@@ -341,8 +341,8 @@ export default function OrderTrackingPage() {
 
             <div className="border-t pt-4 space-y-2">
               <div className="flex items-center justify-between text-sm"><span className="text-gray-500">Item Total</span><span>{formatPrice(order.subtotal)}</span></div>
-              <div className="flex items-center justify-between text-sm"><span className="text-gray-500">Delivery Fee</span><span className={order.deliveryCharge === 0 ? 'text-green-600' : ''}>{order.deliveryCharge === 0 ? 'FREE' : formatPrice(order.deliveryCharge)}</span></div>
-              {order.discount > 0 && <div className="flex items-center justify-between text-sm text-green-600"><span>Discount</span><span>-{formatPrice(order.discount)}</span></div>}
+              <div className="flex items-center justify-between text-sm"><span className="text-gray-500">Delivery Fee</span><span className={order.deliveryCharge === 0 ? 'text-orange-600' : ''}>{order.deliveryCharge === 0 ? 'FREE' : formatPrice(order.deliveryCharge)}</span></div>
+              {order.discount > 0 && <div className="flex items-center justify-between text-sm text-orange-600"><span>Discount</span><span>-{formatPrice(order.discount)}</span></div>}
               <div className="flex items-center justify-between font-bold pt-2 border-t"><span>Total</span><span>{formatPrice(order.total)}</span></div>
               <p className="text-sm text-gray-500">Payment: {order.paymentMethod}</p>
             </div>
@@ -355,7 +355,7 @@ export default function OrderTrackingPage() {
             <CardHeader><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5" />Delivery Address</CardTitle></CardHeader>
             <CardContent>
               <div className="flex items-start gap-3">
-                <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center shrink-0"><MapPin className="h-5 w-5 text-green-600" /></div>
+                <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0"><MapPin className="h-5 w-5 text-orange-600" /></div>
                 <div>
                   {order.deliveryAddress.type && <Badge variant="secondary" className="mb-1">{order.deliveryAddress.type}</Badge>}
                   <p className="font-medium">{order.deliveryAddress.name}</p>
@@ -452,7 +452,7 @@ export default function OrderTrackingPage() {
           )}
           {order.vendor?.phone && (
             <a href={`tel:${order.vendor.phone}`} className="w-full p-4 border rounded-lg flex items-center gap-3 hover:bg-gray-50">
-              <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center"><Phone className="h-5 w-5 text-green-600" /></div>
+              <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center"><Phone className="h-5 w-5 text-orange-600" /></div>
               <div className="text-left"><p className="font-medium">Call Vendor</p><p className="text-sm text-gray-500">{order.vendor.phone}</p></div>
             </a>
           )}

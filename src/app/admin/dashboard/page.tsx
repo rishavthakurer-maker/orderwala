@@ -52,7 +52,7 @@ export default function AdminDashboard() {
 
   const statCards = [
     { title: 'Total Products', value: stats.totalProducts, icon: Package, color: 'bg-blue-500' },
-    { title: 'Categories', value: stats.totalCategories, icon: FolderTree, color: 'bg-green-500' },
+    { title: 'Categories', value: stats.totalCategories, icon: FolderTree, color: 'bg-orange-500' },
     { title: 'Total Orders', value: stats.totalOrders, icon: ShoppingBag, color: 'bg-purple-500' },
     { title: 'Revenue', value: `₹${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'bg-orange-500' },
   ];
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
       </div>
     );
   }
@@ -136,8 +136,8 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-500">Create product categories like Vegetables, Fruits, etc.</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold shrink-0">2</div>
+            <div className="flex items-center gap-4 p-4 bg-orange-50 rounded-lg">
+              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold shrink-0">2</div>
               <div>
                 <p className="font-medium text-gray-900">Add Products</p>
                 <p className="text-sm text-gray-500">Add your products with images, prices, and descriptions.</p>

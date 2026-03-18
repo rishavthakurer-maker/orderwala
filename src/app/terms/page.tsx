@@ -56,7 +56,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-base font-semibold text-gray-900 mb-2">10. Contact</h2>
-            <p>For questions about these terms, contact us at <a href="mailto:support@orderwala.in" className="text-green-600 hover:underline">support@orderwala.in</a>.</p>
+            <p>For questions about these terms, contact us at <a href="mailto:support@orderwala.in" className="text-orange-600 hover:underline">support@orderwala.in</a>.</p>
           </section>
         </div>
       </main>

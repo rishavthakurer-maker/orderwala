@@ -72,7 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
       </div>
     );
   }
@@ -122,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-green-600 text-white'
+                        ? 'bg-orange-600 text-white'
                         : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     )}
                     onClick={() => setIsSidebarOpen(false)}
@@ -186,7 +186,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center gap-2 rounded-lg border px-3 py-1.5 hover:bg-gray-50"
               >
-                <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center text-white text-sm font-medium">
+                <div className="h-8 w-8 rounded-full bg-orange-600 flex items-center justify-center text-white text-sm font-medium">
                   {adminUser?.name?.[0] || 'A'}
                 </div>
                 <span className="hidden md:block text-sm font-medium">

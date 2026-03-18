@@ -22,7 +22,7 @@ const stats = [
     value: 125000,
     change: 12.5,
     icon: IndianRupee,
-    color: 'bg-green-500',
+    color: 'bg-orange-500',
   },
   {
     title: 'Total Orders',
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
                     <Icon className="h-6 w-6 text-white" />
                   </div>
                   <div className={`flex items-center gap-1 text-sm ${
-                    isPositive ? 'text-green-600' : 'text-red-600'
+                    isPositive ? 'text-orange-600' : 'text-red-600'
                   }`}>
                     {isPositive ? (
                       <ArrowUpRight className="h-4 w-4" />
@@ -151,7 +151,7 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Orders</CardTitle>
-            <Link href="/admin/orders" className="text-sm text-green-600 hover:underline">
+            <Link href="/admin/orders" className="text-sm text-orange-600 hover:underline">
               View All
             </Link>
           </CardHeader>
@@ -183,7 +183,7 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Top Selling Products</CardTitle>
-            <Link href="/admin/products" className="text-sm text-green-600 hover:underline">
+            <Link href="/admin/products" className="text-sm text-orange-600 hover:underline">
               View All
             </Link>
           </CardHeader>
@@ -208,7 +208,7 @@ export default function AdminDashboard() {
                       <p className="text-sm text-gray-500">{product.sold} sold</p>
                     </div>
                   </div>
-                  <p className="font-semibold text-green-600">{formatPrice(product.revenue)}</p>
+                  <p className="font-semibold text-orange-600">{formatPrice(product.revenue)}</p>
                 </div>
               ))}
             </div>
@@ -230,7 +230,7 @@ export default function AdminDashboard() {
                   <p className="font-medium">New Vendor Applications</p>
                   <p className="text-sm text-gray-500">5 pending review</p>
                 </div>
-                <Link href="/admin/vendors" className="text-sm text-green-600 hover:underline">
+                <Link href="/admin/vendors" className="text-sm text-orange-600 hover:underline">
                   Review
                 </Link>
               </div>
@@ -239,7 +239,7 @@ export default function AdminDashboard() {
                   <p className="font-medium">Low Stock Products</p>
                   <p className="text-sm text-gray-500">12 items</p>
                 </div>
-                <Link href="/admin/products" className="text-sm text-green-600 hover:underline">
+                <Link href="/admin/products" className="text-sm text-orange-600 hover:underline">
                   View
                 </Link>
               </div>
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
                   <p className="font-medium">Pending Orders</p>
                   <p className="text-sm text-gray-500">8 need attention</p>
                 </div>
-                <Link href="/admin/orders" className="text-sm text-green-600 hover:underline">
+                <Link href="/admin/orders" className="text-sm text-orange-600 hover:underline">
                   View
                 </Link>
               </div>

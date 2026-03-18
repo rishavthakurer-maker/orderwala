@@ -100,7 +100,7 @@ function SearchContent() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search for products, groceries, restaurants..."
-              className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-12 pr-12 text-base focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+              className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-12 pr-12 text-base focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               autoFocus
             />
             {query && (
@@ -150,7 +150,7 @@ function SearchContent() {
                     </Link>
                     <div className="p-3">
                       <Link href={`/product/${id}`}>
-                        <h3 className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-green-600">{product.name}</h3>
+                        <h3 className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-orange-600">{product.name}</h3>
                       </Link>
                       <p className="text-xs text-gray-500 mt-0.5">{vendorName}</p>
                       <div className="flex items-center gap-1 mt-1">
@@ -169,7 +169,7 @@ function SearchContent() {
                           )}
                           <p className="text-xs text-gray-500">per {product.unit}</p>
                         </div>
-                        <button onClick={() => handleAddToCart(product)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 text-white hover:bg-green-700">+</button>
+                        <button onClick={() => handleAddToCart(product)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white hover:bg-orange-700">+</button>
                       </div>
                     </div>
                   </Card>

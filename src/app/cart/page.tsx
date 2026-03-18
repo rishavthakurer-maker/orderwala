@@ -94,7 +94,7 @@ export default function CartPage() {
       <main className="container mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-green-600">Home</Link>
+          <Link href="/" className="hover:text-orange-600">Home</Link>
           <ChevronRight className="h-4 w-4" />
           <span className="text-gray-900">Cart</span>
         </div>
@@ -167,7 +167,7 @@ export default function CartPage() {
                         <span className="w-8 text-center font-semibold">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variant)}
-                          className="h-9 w-9 rounded-xl bg-green-600 text-white flex items-center justify-center hover:bg-green-700 active:scale-95 transition-all"
+                          className="h-9 w-9 rounded-xl bg-orange-600 text-white flex items-center justify-center hover:bg-orange-700 active:scale-95 transition-all"
                           aria-label="Increase quantity"
                         >
                           <Plus className="h-4 w-4" />
@@ -197,10 +197,10 @@ export default function CartPage() {
               {/* Promo Code */}
               <div className="mb-4">
                 {appliedPromo ? (
-                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg p-3">
                     <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">
+                      <Tag className="h-4 w-4 text-orange-600" />
+                      <span className="text-sm font-medium text-orange-800">
                         {appliedPromo.code}
                       </span>
                     </div>
@@ -238,12 +238,12 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Delivery Fee</span>
-                  <span className={deliveryFee === 0 ? 'text-green-600 font-medium' : 'font-medium'}>
+                  <span className={deliveryFee === 0 ? 'text-orange-600 font-medium' : 'font-medium'}>
                     {deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}
                   </span>
                 </div>
                 {appliedPromo && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-orange-600">
                     <span>Discount ({appliedPromo.code})</span>
                     <span className="font-medium">-{formatPrice(appliedPromo.discount)}</span>
                   </div>
@@ -251,7 +251,7 @@ export default function CartPage() {
                 <hr />
                 <div className="flex justify-between text-base">
                   <span className="font-semibold">Total</span>
-                  <span className="font-bold text-green-600">{formatPrice(total)}</span>
+                  <span className="font-bold text-orange-600">{formatPrice(total)}</span>
                 </div>
               </div>
 
@@ -262,7 +262,7 @@ export default function CartPage() {
 
               {/* Continue Shopping */}
               <Link href="/">
-                <button className="w-full mt-3 flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-green-600">
+                <button className="w-full mt-3 flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-orange-600">
                   <ArrowLeft className="h-4 w-4" />
                   Continue Shopping
                 </button>

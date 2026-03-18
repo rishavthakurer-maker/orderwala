@@ -139,7 +139,7 @@ export default function DeliveryRegisterPage() {
             </p>
             <p className="text-sm text-gray-400 mt-2">
               Want to buy instead?{' '}
-              <Link href="/register" className="text-green-600 hover:underline">Sign up as buyer</Link>
+              <Link href="/register" className="text-orange-600 hover:underline">Sign up as buyer</Link>
             </p>
           </div>
         </Card>

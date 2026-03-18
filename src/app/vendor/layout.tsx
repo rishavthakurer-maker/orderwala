@@ -139,7 +139,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 truncate">{store?.store_name || 'My Store'}</p>
                 <div className="flex items-center gap-2">
-                  <span className={`inline-block h-2 w-2 rounded-full ${store?.is_open ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className={`inline-block h-2 w-2 rounded-full ${store?.is_open ? 'bg-orange-500' : 'bg-red-500'}`} />
                   <span className="text-xs text-gray-500">{store?.is_open ? 'Open' : 'Closed'}</span>
                   {store?.is_verified && <span className="text-xs text-blue-600"> Verified</span>}
                 </div>
@@ -195,7 +195,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
                 size="sm"
                 onClick={toggleStoreStatus}
                 disabled={togglingStore}
-                className={store?.is_open ? 'text-green-600 border-green-200' : 'text-red-600 border-red-200'}
+                className={store?.is_open ? 'text-orange-600 border-orange-200' : 'text-red-600 border-red-200'}
               >
                 {store?.is_open ? ' Store Open' : ' Store Closed'}
               </Button>

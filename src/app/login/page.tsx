@@ -159,7 +159,7 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -229,7 +229,7 @@ function LoginPageContent() {
               </div>
 
               <div className="flex justify-end">
-                <Link href="/forgot-password" className="text-sm text-green-600 hover:underline">
+                <Link href="/forgot-password" className="text-sm text-orange-600 hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -299,7 +299,7 @@ function LoginPageContent() {
                 <button
                   type="button"
                   onClick={() => handleSendOTP({ phone: phoneNumber })}
-                  className="w-full text-sm text-green-600 hover:underline"
+                  className="w-full text-sm text-orange-600 hover:underline"
                   disabled={isLoading}
                 >
                   Resend OTP
@@ -354,7 +354,7 @@ function LoginPageContent() {
         {/* Register Link */}
         <p className="text-center text-sm text-gray-600 mt-6">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-green-600 font-medium hover:underline">
+          <Link href="/register" className="text-orange-600 font-medium hover:underline">
             Register
           </Link>
         </p>
@@ -377,7 +377,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+        <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
       </div>
     }>
       <LoginPageContent />

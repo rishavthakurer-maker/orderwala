@@ -71,10 +71,10 @@ export default function OffersPage() {
 
       <main className="container mx-auto px-4 py-6 pb-24 lg:pb-8">
         {/* Hero Banner */}
-        <div className="relative mb-8 overflow-hidden rounded-2xl bg-linear-to-r from-green-600 to-green-700 p-6 lg:p-10 text-white">
+        <div className="relative mb-8 overflow-hidden rounded-2xl bg-linear-to-r from-orange-600 to-orange-700 p-6 lg:p-10 text-white">
           <div className="relative z-10">
             <h1 className="text-2xl lg:text-4xl font-bold mb-2">Offers & Coupons</h1>
-            <p className="text-green-100 text-sm lg:text-base max-w-lg">
+            <p className="text-orange-100 text-sm lg:text-base max-w-lg">
               Save big on your orders! Apply these exclusive promo codes at checkout.
             </p>
           </div>
@@ -111,7 +111,7 @@ export default function OffersPage() {
             {offers.map((offer) => (
               <Card key={offer.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Discount Header */}
-                <div className="bg-linear-to-r from-green-500 to-emerald-500 px-6 py-4 text-white">
+                <div className="bg-linear-to-r from-orange-500 to-amber-500 px-6 py-4 text-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {offer.discountType === 'percentage' ? (
@@ -153,8 +153,8 @@ export default function OffersPage() {
 
                   {/* Promo Code + Copy */}
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 rounded-lg border-2 border-dashed border-green-300 bg-green-50 px-4 py-2.5 text-center">
-                      <span className="font-mono font-bold text-green-700 tracking-wider text-lg">
+                    <div className="flex-1 rounded-lg border-2 border-dashed border-orange-300 bg-orange-50 px-4 py-2.5 text-center">
+                      <span className="font-mono font-bold text-orange-700 tracking-wider text-lg">
                         {offer.code}
                       </span>
                     </div>
@@ -188,7 +188,7 @@ export default function OffersPage() {
                 { step: '3', title: 'Apply at Checkout', desc: 'Paste the code in the promo field and save!' },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-3 p-4 bg-white rounded-xl border">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700 font-bold text-sm">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700 font-bold text-sm">
                     {item.step}
                   </div>
                   <div>

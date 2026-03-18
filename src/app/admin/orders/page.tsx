@@ -147,7 +147,7 @@ export default function OrdersPage() {
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
               aria-label="Filter by status"
             >
               {statusOptions.map(status => (
@@ -164,7 +164,7 @@ export default function OrdersPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
             </div>
           ) : orders.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">

@@ -192,7 +192,7 @@ export default function DeliveryOrdersPage() {
                     <p className="text-sm text-gray-500 mt-1">{order.items.length} items • {formatPrice(order.total)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-green-600 text-lg">{formatPrice(order.deliveryEarnings)}</p>
+                    <p className="font-bold text-orange-600 text-lg">{formatPrice(order.deliveryEarnings)}</p>
                   </div>
                 </div>
 
@@ -228,8 +228,8 @@ export default function DeliveryOrdersPage() {
                       )}
                     </div>
                   )}
-                  <div className="bg-green-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2"><MapPin className="h-4 w-4 text-green-500" /><span className="text-xs font-medium text-green-700">DELIVERY</span></div>
+                  <div className="bg-orange-50 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2"><MapPin className="h-4 w-4 text-orange-500" /><span className="text-xs font-medium text-orange-700">DELIVERY</span></div>
                     <p className="font-medium">{order.customer?.name || 'Customer'}</p>
                     <p className="text-sm text-gray-600">{order.deliveryAddress?.address}</p>
                     {order.customer?.phone && (
@@ -256,7 +256,7 @@ export default function DeliveryOrdersPage() {
                     View Details
                   </Button>
                   {nextAction && (
-                    <Button className={`flex-1 ${nextAction.action === 'delivered' ? 'bg-green-500 hover:bg-green-600' : ''}`} onClick={() => updateOrderStatus(order._id, nextAction.action)}>
+                    <Button className={`flex-1 ${nextAction.action === 'delivered' ? 'bg-orange-500 hover:bg-orange-600' : ''}`} onClick={() => updateOrderStatus(order._id, nextAction.action)}>
                       <CheckCircle className="h-4 w-4 mr-1" />{nextAction.label}
                     </Button>
                   )}
@@ -301,7 +301,7 @@ export default function DeliveryOrdersPage() {
 
             <div className="border-t pt-4">
               <div className="flex items-center justify-between mb-2"><span className="text-gray-500">Order Total</span><span className="font-medium">{formatPrice(selectedOrder.total)}</span></div>
-              <div className="flex items-center justify-between mb-2"><span className="text-gray-500">Your Earnings</span><span className="font-bold text-green-600">{formatPrice(selectedOrder.deliveryEarnings)}</span></div>
+              <div className="flex items-center justify-between mb-2"><span className="text-gray-500">Your Earnings</span><span className="font-bold text-orange-600">{formatPrice(selectedOrder.deliveryEarnings)}</span></div>
               <div className="flex items-center justify-between"><span className="text-gray-500">Payment</span>
                 <Badge variant={selectedOrder.paymentMethod === 'cod' ? 'warning' : 'success'}>{selectedOrder.paymentMethod === 'cod' ? 'COD' : 'Online'}</Badge>
               </div>

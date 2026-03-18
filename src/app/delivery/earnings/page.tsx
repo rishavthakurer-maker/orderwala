@@ -92,7 +92,7 @@ export default function DeliveryEarningsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card><CardContent className="p-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center"><DollarSign className="h-5 w-5 text-green-600" /></div>
+            <div className="h-10 w-10 bg-orange-100 rounded-lg flex items-center justify-center"><DollarSign className="h-5 w-5 text-orange-600" /></div>
             <div><p className="text-sm text-gray-500">Today</p><p className="text-xl font-bold">{formatPrice(summary.todayEarnings)}</p></div>
           </div>
         </CardContent></Card>
@@ -145,8 +145,8 @@ export default function DeliveryEarningsPage() {
             {recentEarnings.map((earning, index) => (
               <div key={index} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <Package className="h-5 w-5 text-green-600" />
+                  <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Package className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
                     <p className="font-medium">Order {earning.orderId}</p>
@@ -154,7 +154,7 @@ export default function DeliveryEarningsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-green-600">+{formatPrice(earning.amount)}</p>
+                  <p className="font-bold text-orange-600">+{formatPrice(earning.amount)}</p>
                   <Badge variant="success" className="text-xs">Credited</Badge>
                 </div>
               </div>

@@ -42,10 +42,10 @@ export default function ContactPage() {
           ].map((item) => (
             <Card key={item.label}>
               <CardContent className="p-4 text-center">
-                <item.icon className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                <item.icon className="h-6 w-6 text-orange-600 mx-auto mb-2" />
                 <p className="text-xs text-gray-500 mb-1">{item.label}</p>
                 {item.href ? (
-                  <a href={item.href} className="text-sm font-medium text-gray-900 hover:text-green-600">{item.value}</a>
+                  <a href={item.href} className="text-sm font-medium text-gray-900 hover:text-orange-600">{item.value}</a>
                 ) : (
                   <p className="text-sm font-medium text-gray-900">{item.value}</p>
                 )}
@@ -65,7 +65,7 @@ export default function ContactPage() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={5}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
               />
               <Button type="submit" className="w-full" disabled={sending}>
                 <Send className="h-4 w-4 mr-2" />

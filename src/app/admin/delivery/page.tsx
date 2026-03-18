@@ -184,7 +184,7 @@ export default function DeliveryPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
             </div>
           ) : partners.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -235,7 +235,7 @@ export default function DeliveryPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button onClick={() => handleToggleActive(partner)}>
                           {partner.is_active ? (
-                            <ToggleRight className="h-6 w-6 text-green-500" />
+                            <ToggleRight className="h-6 w-6 text-orange-500" />
                           ) : (
                             <ToggleLeft className="h-6 w-6 text-gray-400" />
                           )}
@@ -358,7 +358,7 @@ export default function DeliveryPage() {
                 type="checkbox"
                 checked={formData.is_verified}
                 onChange={(e) => setFormData(p => ({ ...p, is_verified: e.target.checked }))}
-                className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
               />
               <span className="text-sm text-gray-700">Verified Partner</span>
             </label>

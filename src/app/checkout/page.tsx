@@ -366,7 +366,7 @@ export default function CheckoutPage() {
                         <p className="text-gray-600 text-sm">{selectedAddress.city}, {selectedAddress.state} - {selectedAddress.pincode}</p>
                         <p className="text-gray-600 text-sm mt-1">{selectedAddress.phone}</p>
                       </div>
-                      <Check className="h-5 w-5 text-green-500" />
+                      <Check className="h-5 w-5 text-orange-500" />
                     </div>
                   </div>
                 ) : (
@@ -448,13 +448,13 @@ export default function CheckoutPage() {
                       {isApplyingPromo ? '...' : appliedPromo ? 'Remove' : 'Apply'}
                     </Button>
                   </div>
-                  {appliedPromo && <p className="text-sm text-green-600 mt-2">&#10003; Code &quot;{appliedPromo.code}&quot; applied! You save {formatPrice(appliedPromo.discount)}</p>}
+                  {appliedPromo && <p className="text-sm text-orange-600 mt-2">&#10003; Code &quot;{appliedPromo.code}&quot; applied! You save {formatPrice(appliedPromo.discount)}</p>}
                 </div>
 
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex items-center justify-between text-sm"><span className="text-gray-500">Item Total</span><span>{formatPrice(subtotal)}</span></div>
-                  <div className="flex items-center justify-between text-sm"><span className="text-gray-500">Delivery Fee</span><span className={deliveryCharge === 0 ? 'text-green-600' : ''}>{deliveryCharge === 0 ? 'FREE' : formatPrice(deliveryCharge)}</span></div>
-                  {discount > 0 && <div className="flex items-center justify-between text-sm text-green-600"><span>Promo Discount</span><span>-{formatPrice(discount)}</span></div>}
+                  <div className="flex items-center justify-between text-sm"><span className="text-gray-500">Delivery Fee</span><span className={deliveryCharge === 0 ? 'text-orange-600' : ''}>{deliveryCharge === 0 ? 'FREE' : formatPrice(deliveryCharge)}</span></div>
+                  {discount > 0 && <div className="flex items-center justify-between text-sm text-orange-600"><span>Promo Discount</span><span>-{formatPrice(discount)}</span></div>}
                   <div className="flex items-center justify-between font-bold text-lg pt-2 border-t"><span>Total</span><span>{formatPrice(total)}</span></div>
                 </div>
 

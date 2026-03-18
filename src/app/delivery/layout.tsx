@@ -152,7 +152,7 @@ export default function DeliveryLayout({
             </button>
             <div className="flex-1 lg:flex-none" />
             <div className="flex items-center gap-3">
-              <Button variant={isOnline ? 'primary' : 'outline'} size="sm" onClick={() => setIsOnline(!isOnline)} className={isOnline ? 'bg-green-500 hover:bg-green-600' : ''}>
+              <Button variant={isOnline ? 'primary' : 'outline'} size="sm" onClick={() => setIsOnline(!isOnline)} className={isOnline ? 'bg-orange-500 hover:bg-orange-600' : ''}>
                 {isOnline ? '🟢 Online' : '⚪ Go Online'}
               </Button>
               <button className="relative p-2 hover:bg-gray-100 rounded-lg" aria-label="Notifications">

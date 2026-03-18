@@ -155,7 +155,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -189,8 +189,8 @@ export default function ForgotPasswordPage() {
           {step === 'email' && (
             <>
               <div className="text-center mb-6">
-                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <Mail className="h-8 w-8 text-green-600" />
+                <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                  <Mail className="h-8 w-8 text-orange-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">Forgot Password?</h2>
                 <p className="text-gray-500 text-sm mt-2">
@@ -223,8 +223,8 @@ export default function ForgotPasswordPage() {
           {step === 'otp' && (
             <>
               <div className="text-center mb-6">
-                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <KeyRound className="h-8 w-8 text-green-600" />
+                <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                  <KeyRound className="h-8 w-8 text-orange-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">Enter Verification Code</h2>
                 <p className="text-gray-500 text-sm mt-2">
@@ -256,7 +256,7 @@ export default function ForgotPasswordPage() {
                     type="button"
                     onClick={handleResendOTP}
                     disabled={isLoading}
-                    className="text-sm text-green-600 hover:underline disabled:opacity-50"
+                    className="text-sm text-orange-600 hover:underline disabled:opacity-50"
                   >
                     Didn&apos;t receive the code? Resend
                   </button>
@@ -269,8 +269,8 @@ export default function ForgotPasswordPage() {
           {step === 'password' && (
             <>
               <div className="text-center mb-6">
-                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <Lock className="h-8 w-8 text-green-600" />
+                <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                  <Lock className="h-8 w-8 text-orange-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">Set New Password</h2>
                 <p className="text-gray-500 text-sm mt-2">
@@ -329,9 +329,9 @@ export default function ForgotPasswordPage() {
           {/* Step 4: Success */}
           {step === 'success' && (
             <div className="text-center py-6">
-              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
                 <svg
-                  className="h-8 w-8 text-green-600"
+                  className="h-8 w-8 text-orange-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -362,7 +362,7 @@ export default function ForgotPasswordPage() {
         {step === 'email' && (
           <p className="text-center text-sm text-gray-600 mt-6">
             Remember your password?{' '}
-            <Link href="/login" className="text-green-600 font-medium hover:underline">
+            <Link href="/login" className="text-orange-600 font-medium hover:underline">
               Login
             </Link>
           </p>

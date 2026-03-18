@@ -184,7 +184,7 @@ export default function DeliveryDashboard() {
         <Card><CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-500">Today&apos;s Earnings</p><p className="text-2xl font-bold mt-1">{formatPrice(stats.todayEarnings)}</p></div>
-            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center"><DollarSign className="h-6 w-6 text-green-600" /></div>
+            <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center"><DollarSign className="h-6 w-6 text-orange-600" /></div>
           </div>
         </CardContent></Card>
         <Card><CardContent className="p-4">
@@ -218,7 +218,7 @@ export default function DeliveryDashboard() {
                       </div>
                       <p className="text-sm text-gray-500 mt-1">{order.items.length} items • {formatPrice(order.total)}</p>
                     </div>
-                    <p className="font-bold text-green-600">{formatPrice(order.deliveryEarnings)}</p>
+                    <p className="font-bold text-orange-600">{formatPrice(order.deliveryEarnings)}</p>
                   </div>
 
                   <div className="space-y-3 border-t pt-3">
@@ -229,7 +229,7 @@ export default function DeliveryDashboard() {
                       </div>
                     )}
                     <div className="flex items-start gap-2">
-                      <div className="h-6 w-6 bg-green-100 rounded-full flex items-center justify-center shrink-0 mt-0.5"><span className="text-xs">🏠</span></div>
+                      <div className="h-6 w-6 bg-orange-100 rounded-full flex items-center justify-center shrink-0 mt-0.5"><span className="text-xs">🏠</span></div>
                       <div><p className="text-xs text-gray-500">DELIVERY</p><p className="text-sm font-medium">{order.customer?.name || 'Customer'}</p><p className="text-sm text-gray-500">{order.deliveryAddress?.address}</p></div>
                     </div>
                   </div>
@@ -241,7 +241,7 @@ export default function DeliveryDashboard() {
                       </a>
                     )}
                     {nextAction && (
-                      <Button className={`flex-1 ${nextAction.action === 'delivered' ? 'bg-green-500 hover:bg-green-600' : ''}`} size="sm" onClick={() => handleUpdateStatus(order._id, nextAction.action)}>
+                      <Button className={`flex-1 ${nextAction.action === 'delivered' ? 'bg-orange-500 hover:bg-orange-600' : ''}`} size="sm" onClick={() => handleUpdateStatus(order._id, nextAction.action)}>
                         <Navigation className="h-4 w-4 mr-1" />{nextAction.label}
                       </Button>
                     )}
@@ -261,11 +261,11 @@ export default function DeliveryDashboard() {
             <div key={order._id} className="bg-gray-50 rounded-lg p-4 border">
               <div className="flex items-start justify-between mb-3">
                 <div><span className="font-medium">{order.orderId}</span><p className="text-sm text-gray-500 mt-1">{order.items.length} items • {formatPrice(order.total)}</p></div>
-                <p className="font-bold text-green-600">{formatPrice(order.deliveryEarnings)}</p>
+                <p className="font-bold text-orange-600">{formatPrice(order.deliveryEarnings)}</p>
               </div>
               <div className="space-y-2 text-sm">
                 {order.vendor && <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-orange-500" /><span className="text-gray-600">{order.vendor.storeName}</span></div>}
-                <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-green-500" /><span className="text-gray-600">{order.deliveryAddress?.address || 'Delivery address'}</span></div>
+                <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-orange-500" /><span className="text-gray-600">{order.deliveryAddress?.address || 'Delivery address'}</span></div>
               </div>
               <Button className="w-full mt-3" onClick={() => handleAcceptOrder(order._id)} disabled={acceptingOrder === order._id}>
                 {acceptingOrder === order._id ? 'Accepting...' : 'Accept Order'}
@@ -284,7 +284,7 @@ export default function DeliveryDashboard() {
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 bg-gray-50 rounded-lg"><p className="text-2xl font-bold text-blue-600">{stats.weekDeliveries}</p><p className="text-sm text-gray-500">Deliveries</p></div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg"><p className="text-2xl font-bold text-green-600">{formatPrice(stats.weekEarnings)}</p><p className="text-sm text-gray-500">Earnings</p></div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg"><p className="text-2xl font-bold text-orange-600">{formatPrice(stats.weekEarnings)}</p><p className="text-sm text-gray-500">Earnings</p></div>
           </div>
         </CardContent>
       </Card>

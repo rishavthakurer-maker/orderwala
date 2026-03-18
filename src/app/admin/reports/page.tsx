@@ -72,7 +72,7 @@ export default function ReportsPage() {
       value: `₹${stats.totalRevenue.toLocaleString()}`,
       growth: stats.revenueGrowth,
       icon: DollarSign,
-      color: 'bg-green-500',
+      color: 'bg-orange-500',
     },
     {
       title: 'Total Orders',
@@ -110,7 +110,7 @@ export default function ReportsPage() {
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
             aria-label="Select date range"
-            className="px-4 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="px-4 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="today">Today</option>
             <option value="7days">Last 7 Days</option>
@@ -118,7 +118,7 @@ export default function ReportsPage() {
             <option value="90days">Last 90 Days</option>
             <option value="year">This Year</option>
           </select>
-          <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
             <Download className="w-4 h-4" />
             Export
           </button>
@@ -134,7 +134,7 @@ export default function ReportsPage() {
                 <card.icon className="w-6 h-6 text-white" />
               </div>
               {card.growth !== 0 && (
-                <div className={`flex items-center gap-1 text-sm ${card.growth > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`flex items-center gap-1 text-sm ${card.growth > 0 ? 'text-orange-600' : 'text-red-600'}`}>
                   {card.growth > 0 ? (
                     <ArrowUpRight className="w-4 h-4" />
                   ) : (
@@ -171,7 +171,7 @@ export default function ReportsPage() {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold">Top Products</h2>
-            <TrendingUp className="w-5 h-5 text-green-500" />
+            <TrendingUp className="w-5 h-5 text-orange-500" />
           </div>
           {loading ? (
             <div className="space-y-4">
@@ -196,7 +196,7 @@ export default function ReportsPage() {
                     <p className="font-medium text-gray-900">{product.name}</p>
                     <p className="text-sm text-gray-500">{product.sales} sales</p>
                   </div>
-                  <p className="font-semibold text-green-600">₹{product.revenue.toLocaleString()}</p>
+                  <p className="font-semibold text-orange-600">₹{product.revenue.toLocaleString()}</p>
                 </div>
               ))}
             </div>

@@ -136,7 +136,7 @@ export default function FavoritesPage() {
                   </Link>
                   <div className="p-3">
                     <Link href={`/product/${p.id}`}>
-                      <h3 className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-green-600">{p.name}</h3>
+                      <h3 className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-orange-600">{p.name}</h3>
                     </Link>
                     <div className="flex items-center gap-1 mt-1">
                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -154,7 +154,7 @@ export default function FavoritesPage() {
                         )}
                         <p className="text-xs text-gray-500">per {p.unit}</p>
                       </div>
-                      <button onClick={() => handleAddToCart(fav)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 text-white hover:bg-green-700">+</button>
+                      <button onClick={() => handleAddToCart(fav)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white hover:bg-orange-700">+</button>
                     </div>
                   </div>
                 </Card>

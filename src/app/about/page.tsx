@@ -9,7 +9,7 @@ export default function AboutPage() {
         {/* Hero */}
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-            About <span className="text-green-600">Order</span><span className="text-yellow-500">वाला</span>
+            About <span className="text-orange-600">Order</span><span className="text-yellow-500">वाला</span>
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Your one-stop destination for fresh groceries, delicious food, and quick delivery at your doorstep.
@@ -39,8 +39,8 @@ export default function AboutPage() {
             { icon: Clock, title: 'Convenient', desc: 'Order anytime, from anywhere. We handle the rest.' },
           ].map((item) => (
             <div key={item.title} className="bg-white rounded-xl p-5 shadow-sm text-center">
-              <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                <item.icon className="h-6 w-6 text-green-600" />
+              <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <item.icon className="h-6 w-6 text-orange-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">{item.title}</h3>
               <p className="text-sm text-gray-500">{item.desc}</p>
@@ -49,12 +49,12 @@ export default function AboutPage() {
         </div>
 
         {/* Contact */}
-        <div className="bg-green-50 rounded-xl p-6 text-center">
+        <div className="bg-orange-50 rounded-xl p-6 text-center">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Have Questions?</h2>
           <p className="text-gray-600 text-sm mb-3">
             Reach out to us anytime. We&apos;d love to hear from you.
           </p>
-          <a href="mailto:support@orderwala.in" className="text-green-600 font-medium hover:underline">
+          <a href="mailto:support@orderwala.in" className="text-orange-600 font-medium hover:underline">
             support@orderwala.in
           </a>
         </div>

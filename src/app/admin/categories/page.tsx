@@ -233,7 +233,7 @@ export default function CategoriesPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
             </div>
           ) : filteredCategories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -277,7 +277,7 @@ export default function CategoriesPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{cat.sort_order}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button onClick={() => handleToggleActive(cat)} className="flex items-center">
-                          {cat.is_active ? <ToggleRight className="h-6 w-6 text-green-500" /> : <ToggleLeft className="h-6 w-6 text-gray-400" />}
+                          {cat.is_active ? <ToggleRight className="h-6 w-6 text-orange-500" /> : <ToggleLeft className="h-6 w-6 text-gray-400" />}
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -337,7 +337,7 @@ export default function CategoriesPage() {
                 </button>
               </div>
             ) : (
-              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-300 hover:border-green-500 flex flex-col items-center justify-center text-gray-400 hover:text-green-600 transition-colors">
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-300 hover:border-orange-500 flex flex-col items-center justify-center text-gray-400 hover:text-orange-600 transition-colors">
                 {uploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <><ImagePlus className="h-6 w-6" /><span className="text-xs mt-1">Upload</span></>}
               </button>
             )}

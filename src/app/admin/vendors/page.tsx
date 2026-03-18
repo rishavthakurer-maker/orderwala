@@ -214,7 +214,7 @@ export default function VendorsPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
             </div>
           ) : vendors.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -241,8 +241,8 @@ export default function VendorsPage() {
                     <tr key={vendor.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 shrink-0 bg-green-100 rounded-full flex items-center justify-center">
-                            <span className="text-green-600 font-medium">{vendor.store_name.charAt(0)}</span>
+                          <div className="h-10 w-10 shrink-0 bg-orange-100 rounded-full flex items-center justify-center">
+                            <span className="text-orange-600 font-medium">{vendor.store_name.charAt(0)}</span>
                           </div>
                           <div className="ml-4">
                             <div className="flex items-center gap-2">
@@ -325,8 +325,8 @@ export default function VendorsPage() {
         {viewingVendor && (
           <div className="p-6 space-y-6">
             <div className="flex items-start gap-4">
-              <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-green-600 text-2xl font-bold">{viewingVendor.store_name.charAt(0)}</span>
+              <div className="h-16 w-16 bg-orange-100 rounded-full flex items-center justify-center">
+                <span className="text-orange-600 text-2xl font-bold">{viewingVendor.store_name.charAt(0)}</span>
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -454,7 +454,7 @@ export default function VendorsPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <textarea
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
               rows={3}
               placeholder="Vendor description..."
               value={formData.description}
@@ -468,7 +468,7 @@ export default function VendorsPage() {
                 type="checkbox"
                 checked={formData.is_verified}
                 onChange={(e) => setFormData(p => ({ ...p, is_verified: e.target.checked }))}
-                className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
               />
               <span className="text-sm text-gray-700">Verified Vendor</span>
             </label>

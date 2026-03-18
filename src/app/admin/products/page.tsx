@@ -355,7 +355,7 @@ export default function ProductsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
-              className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
               aria-label="Filter by category"
             >
               <option value="">All Categories</option>
@@ -372,7 +372,7 @@ export default function ProductsPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
             </div>
           ) : products.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -435,7 +435,7 @@ export default function ProductsPage() {
                         <div>
                           <p className="text-sm font-medium text-gray-900">{formatPrice(product.price)}/{product.unit}</p>
                           {product.discount_price && product.discount_price < product.price && (
-                            <p className="text-xs text-green-600 font-medium">Sale: {formatPrice(product.discount_price)}</p>
+                            <p className="text-xs text-orange-600 font-medium">Sale: {formatPrice(product.discount_price)}</p>
                           )}
                         </div>
                       </td>
@@ -446,7 +446,7 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button onClick={() => handleToggle(product, 'isAvailable')} className="flex items-center">
-                          {product.is_available ? <ToggleRight className="h-6 w-6 text-green-500" /> : <ToggleLeft className="h-6 w-6 text-gray-400" />}
+                          {product.is_available ? <ToggleRight className="h-6 w-6 text-orange-500" /> : <ToggleLeft className="h-6 w-6 text-gray-400" />}
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -513,7 +513,7 @@ export default function ProductsPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 hover:border-green-500 flex flex-col items-center justify-center text-gray-400 hover:text-green-600 transition-colors"
+                className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 hover:border-orange-500 flex flex-col items-center justify-center text-gray-400 hover:text-orange-600 transition-colors"
               >
                 {uploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <><ImagePlus className="h-6 w-6" /><span className="text-xs mt-1">Upload</span></>}
               </button>
@@ -527,7 +527,7 @@ export default function ProductsPage() {
             <Input label="Product Name *" placeholder="Enter product name" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} required />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="product-category">Category *</label>
-              <select id="product-category" value={form.categoryId} onChange={(e) => setForm(f => ({ ...f, categoryId: e.target.value }))} className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" required>
+              <select id="product-category" value={form.categoryId} onChange={(e) => setForm(f => ({ ...f, categoryId: e.target.value }))} className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" required>
                 <option value="">Select category</option>
                 {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
               </select>
@@ -537,7 +537,7 @@ export default function ProductsPage() {
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="product-desc">Description</label>
-            <textarea id="product-desc" value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Describe the product..." rows={3} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 resize-none" />
+            <textarea id="product-desc" value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Describe the product..." rows={3} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 resize-none" />
           </div>
 
           {/* Price, Discount, Unit, Stock */}
@@ -546,7 +546,7 @@ export default function ProductsPage() {
             <Input label="Discount Price (₹)" type="number" min="0" step="0.01" placeholder="Optional" value={form.discountPrice} onChange={(e) => setForm(f => ({ ...f, discountPrice: e.target.value }))} />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="product-unit">Unit</label>
-              <select id="product-unit" value={form.unit} onChange={(e) => setForm(f => ({ ...f, unit: e.target.value }))} className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">
+              <select id="product-unit" value={form.unit} onChange={(e) => setForm(f => ({ ...f, unit: e.target.value }))} className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
                 <option value="piece">Piece</option>
                 <option value="kg">Kg</option>
                 <option value="g">Gram</option>
@@ -566,7 +566,7 @@ export default function ProductsPage() {
           <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="product-vendor">Vendor</label>
-              <select id="product-vendor" value={form.vendorId} onChange={(e) => setForm(f => ({ ...f, vendorId: e.target.value }))} className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">
+              <select id="product-vendor" value={form.vendorId} onChange={(e) => setForm(f => ({ ...f, vendorId: e.target.value }))} className="w-full h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
                 <option value="">Auto-assign vendor</option>
                 {vendors.map(v => <option key={v.id} value={v.id}>{v.store_name}</option>)}
               </select>
@@ -581,15 +581,15 @@ export default function ProductsPage() {
           {/* Toggles */}
           <div className="flex flex-wrap items-center gap-6 pt-2">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.isVeg} onChange={(e) => setForm(f => ({ ...f, isVeg: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+              <input type="checkbox" checked={form.isVeg} onChange={(e) => setForm(f => ({ ...f, isVeg: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
               <span className="text-sm text-gray-700">Vegetarian</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.isAvailable} onChange={(e) => setForm(f => ({ ...f, isAvailable: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+              <input type="checkbox" checked={form.isAvailable} onChange={(e) => setForm(f => ({ ...f, isAvailable: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
               <span className="text-sm text-gray-700">Available</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm(f => ({ ...f, isFeatured: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+              <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm(f => ({ ...f, isFeatured: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
               <span className="text-sm text-gray-700">Featured</span>
             </label>
           </div>

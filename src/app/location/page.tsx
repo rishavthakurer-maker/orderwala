@@ -12,7 +12,7 @@ const MapPicker = dynamic(() => import('@/components/map/MapPicker').then(m => (
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-87.5 bg-gray-50 rounded-lg border">
-      <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+      <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
       <span className="ml-2 text-sm text-gray-500">Loading map...</span>
     </div>
   ),
@@ -143,7 +143,7 @@ function LocationPageContent() {
           onClick={detectCurrentLocation}
           disabled={detecting}
           variant="outline"
-          className="w-full border-green-200 text-green-700 hover:bg-green-50"
+          className="w-full border-orange-200 text-orange-700 hover:bg-orange-50"
         >
           {detecting ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -165,12 +165,12 @@ function LocationPageContent() {
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                <MapPinned className="h-4 w-4 text-green-600" />
+                <MapPinned className="h-4 w-4 text-orange-600" />
                 Delivery Address Details
               </h3>
               <button
                 onClick={() => setManualMode(!manualMode)}
-                className="text-xs text-green-600 hover:underline"
+                className="text-xs text-orange-600 hover:underline"
               >
                 {manualMode ? 'Use map instead' : 'Enter manually'}
               </button>
@@ -184,7 +184,7 @@ function LocationPageContent() {
                 placeholder="House no., Building, Street, Area"
                 rows={2}
                 title="Complete delivery address"
-                className="w-full rounded-lg border border-gray-300 py-2 px-3 text-sm focus:border-green-500 focus:outline-none resize-none"
+                className="w-full rounded-lg border border-gray-300 py-2 px-3 text-sm focus:border-orange-500 focus:outline-none resize-none"
               />
             </div>
 
@@ -245,8 +245,8 @@ function LocationPageContent() {
               }}
               className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 flex items-center gap-3"
             >
-              <div className="p-2 bg-green-50 rounded-lg">
-                <Home className="h-4 w-4 text-green-600" />
+              <div className="p-2 bg-orange-50 rounded-lg">
+                <Home className="h-4 w-4 text-orange-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{currentLocation.address}</p>
@@ -266,7 +266,7 @@ export default function LocationPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+        <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
       </div>
     }>
       <LocationPageContent />

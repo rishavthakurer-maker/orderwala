@@ -290,7 +290,7 @@ export default function DeliveryOnboardingPage() {
                   }`}
                 >
                   <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    isDone ? 'bg-green-500 text-white' : isCurrent ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                    isDone ? 'bg-orange-500 text-white' : isCurrent ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
                   }`}>
                     {isDone ? <CheckCircle className="h-5 w-5" /> : idx + 1}
                   </div>
@@ -491,8 +491,8 @@ export default function DeliveryOnboardingPage() {
             <div className="bg-gray-50 rounded-xl p-6 text-center border-2 border-dashed border-gray-300">
               {areaLat && areaLng ? (
                 <div>
-                  <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <MapPin className="h-6 w-6 text-green-600" />
+                  <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <MapPin className="h-6 w-6 text-orange-600" />
                   </div>
                   <p className="font-medium text-gray-900">Location Detected</p>
                   <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">{areaAddress || `${areaLat.toFixed(4)}, ${areaLng.toFixed(4)}`}</p>
@@ -549,12 +549,12 @@ export default function DeliveryOnboardingPage() {
 
       {/* Submit Button */}
       {isComplete && !submitted && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-orange-200 bg-orange-50">
           <CardContent className="p-6 text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+            <CheckCircle className="h-12 w-12 text-orange-500 mx-auto mb-3" />
             <h3 className="text-lg font-bold text-gray-900">All Steps Complete!</h3>
             <p className="text-gray-500 mt-1 mb-4">Submit your application to start delivering</p>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={handleSubmitOnboarding} disabled={saving}>
+            <Button className="bg-orange-600 hover:bg-orange-700" onClick={handleSubmitOnboarding} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Bike className="h-4 w-4 mr-2" />}
               Submit Application
             </Button>

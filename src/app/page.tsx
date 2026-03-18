@@ -42,7 +42,7 @@ interface Vendor {
 }
 
 const banners = [
-  { id: '1', title: 'Fresh Vegetables', subtitle: 'Up to 30% Off on farm-fresh produce', image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200&h=400&fit=crop', color: 'from-green-600 via-green-500 to-emerald-500' },
+  { id: '1', title: 'Fresh Vegetables', subtitle: 'Up to 30% Off on farm-fresh produce', image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200&h=400&fit=crop', color: 'from-orange-600 via-orange-500 to-amber-500' },
   { id: '2', title: 'Fresh Groceries', subtitle: 'Free Delivery on your first order', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&h=400&fit=crop', color: 'from-orange-500 via-amber-500 to-yellow-500' },
   { id: '3', title: 'Fresh Meat & Fish', subtitle: 'Premium quality guaranteed', image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1200&h=400&fit=crop', color: 'from-red-600 via-rose-500 to-pink-500' },
 ];
@@ -143,7 +143,7 @@ export default function HomePage() {
                   <div className="container mx-auto px-4">
                     <div className="max-w-xl animate-fade-in-up">
                       <span className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-1.5 text-sm font-medium text-white mb-4">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-300 animate-pulse" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-orange-300 animate-pulse" />
                         Order Now
                       </span>
                       <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-2 sm:mb-3 text-white leading-tight drop-shadow-lg">
@@ -182,8 +182,8 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
               <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-linear-to-br from-green-100 to-emerald-50 shadow-sm">
-                  <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-linear-to-br from-orange-100 to-amber-50 shadow-sm">
+                  <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-gray-900">Fast Delivery</p>
@@ -229,7 +229,7 @@ export default function HomePage() {
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900">Shop by Category</h2>
                 <p className="text-xs sm:text-sm text-gray-500 mt-1">Browse your favorite categories</p>
               </div>
-              <Link href="/categories" className="text-green-600 text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all duration-200 bg-green-50 px-4 py-2 rounded-xl hover:bg-green-100">
+              <Link href="/categories" className="text-orange-600 text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all duration-200 bg-orange-50 px-4 py-2 rounded-xl hover:bg-orange-100">
                 View All <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
@@ -248,7 +248,7 @@ export default function HomePage() {
                     href={`/category/${category.slug}`}
                     className="flex flex-col items-center group"
                   >
-                    <div className="relative mb-2 sm:mb-3 h-16 w-16 sm:h-20 sm:w-20 md:h-22 md:w-22 overflow-hidden rounded-2xl border-2 border-gray-100 group-hover:border-green-400 group-hover:shadow-lg group-hover:shadow-green-100 transition-all duration-300 group-hover:scale-105 active:scale-95">
+                    <div className="relative mb-2 sm:mb-3 h-16 w-16 sm:h-20 sm:w-20 md:h-22 md:w-22 overflow-hidden rounded-2xl border-2 border-gray-100 group-hover:border-orange-400 group-hover:shadow-lg group-hover:shadow-orange-100 transition-all duration-300 group-hover:scale-105 active:scale-95">
                       {category.image ? (
                         <img
                           src={category.image}
@@ -256,12 +256,12 @@ export default function HomePage() {
                           className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="h-full w-full bg-linear-to-br from-green-50 to-emerald-100 flex items-center justify-center">
+                        <div className="h-full w-full bg-linear-to-br from-orange-50 to-amber-100 flex items-center justify-center">
                           <span className="text-3xl">{category.icon || '🛒'}</span>
                         </div>
                       )}
                     </div>
-                    <span className="text-xs md:text-sm text-center font-semibold text-gray-700 group-hover:text-green-600 transition-colors duration-200">
+                    <span className="text-xs md:text-sm text-center font-semibold text-gray-700 group-hover:text-orange-600 transition-colors duration-200">
                       {category.name}
                     </span>
                   </Link>
@@ -279,7 +279,7 @@ export default function HomePage() {
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900">Best Sellers</h2>
                 <p className="text-xs sm:text-sm text-gray-500 mt-1">Most loved products by our customers</p>
               </div>
-              <Link href="/categories" className="text-green-600 text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all duration-200 bg-green-50 px-4 py-2 rounded-xl hover:bg-green-100">
+              <Link href="/categories" className="text-orange-600 text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all duration-200 bg-orange-50 px-4 py-2 rounded-xl hover:bg-orange-100">
                 View All <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
@@ -293,7 +293,7 @@ export default function HomePage() {
             ) : featuredProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
                 {featuredProducts.slice(0, 12).map((product) => (
-                  <div key={product._id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 group hover:shadow-lg hover:shadow-green-100/50 hover:-translate-y-1 transition-all duration-300 active:scale-[0.98]">
+                  <div key={product._id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 group hover:shadow-lg hover:shadow-orange-100/50 hover:-translate-y-1 transition-all duration-300 active:scale-[0.98]">
                     <Link href={`/product/${product._id}`}>
                       <div className="relative aspect-square overflow-hidden">
                         {product.images?.[0] ? (
@@ -312,14 +312,14 @@ export default function HomePage() {
                             {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
                           </span>
                         )}
-                        <span className={`absolute top-2 right-2 h-5 w-5 rounded-md border-2 ${product.isVeg ? 'border-green-600' : 'border-red-600'} flex items-center justify-center bg-white shadow-sm`}>
-                          <span className={`h-2.5 w-2.5 rounded-full ${product.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
+                        <span className={`absolute top-2 right-2 h-5 w-5 rounded-md border-2 ${product.isVeg ? 'border-orange-600' : 'border-red-600'} flex items-center justify-center bg-white shadow-sm`}>
+                          <span className={`h-2.5 w-2.5 rounded-full ${product.isVeg ? 'bg-orange-600' : 'bg-red-600'}`} />
                         </span>
                       </div>
                     </Link>
                     <div className="p-3">
                       <Link href={`/product/${product._id}`}>
-                        <h3 className="text-sm font-semibold text-gray-900 line-clamp-1 group-hover:text-green-600 transition-colors">
+                        <h3 className="text-sm font-semibold text-gray-900 line-clamp-1 group-hover:text-orange-600 transition-colors">
                           {product.name}
                         </h3>
                       </Link>
@@ -348,7 +348,7 @@ export default function HomePage() {
                         </div>
                         <button
                           onClick={() => handleAddToCart(product)}
-                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-r from-green-600 to-emerald-600 text-white hover:shadow-lg hover:shadow-green-200 hover:scale-110 transition-all duration-200 font-bold"
+                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-r from-orange-600 to-amber-600 text-white hover:shadow-lg hover:shadow-orange-200 hover:scale-110 transition-all duration-200 font-bold"
                           aria-label={`Add ${product.name} to cart`}
                         >
                           +
@@ -386,8 +386,8 @@ export default function HomePage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   {popularVendors.map((vendor) => (
-                    <div key={vendor._id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 group cursor-pointer hover:shadow-lg hover:shadow-green-100/50 hover:-translate-y-1 transition-all duration-300">
-                      <div className="relative h-36 overflow-hidden bg-linear-to-br from-green-50 to-emerald-50">
+                    <div key={vendor._id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 group cursor-pointer hover:shadow-lg hover:shadow-orange-100/50 hover:-translate-y-1 transition-all duration-300">
+                      <div className="relative h-36 overflow-hidden bg-linear-to-br from-orange-50 to-amber-50">
                         {vendor.logo ? (
                           <img
                             src={vendor.logo}
@@ -405,7 +405,7 @@ export default function HomePage() {
                         </div>
                       </div>
                       <div className="p-4">
-                        <h3 className="font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                        <h3 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
                           {vendor.storeName}
                         </h3>
                         <p className="text-sm text-gray-400 mt-1 line-clamp-1">
@@ -431,7 +431,7 @@ export default function HomePage() {
         )}
 
         {/* Download App CTA */}
-        <section className="py-16 bg-linear-to-br from-green-600 via-emerald-600 to-teal-600 relative overflow-hidden">
+        <section className="py-16 bg-linear-to-br from-orange-600 via-amber-600 to-teal-600 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
             <div className="absolute bottom-10 right-10 w-96 h-96 bg-yellow-300 rounded-full blur-3xl" />
@@ -443,7 +443,7 @@ export default function HomePage() {
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-3">
                   Download Our App
                 </h2>
-                <p className="text-green-100 mb-6 text-lg max-w-md">
+                <p className="text-orange-100 mb-6 text-lg max-w-md">
                   Get exclusive offers and faster checkout with our mobile app
                 </p>
                 <div className="flex gap-4 justify-center md:justify-start">
