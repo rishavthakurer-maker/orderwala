@@ -15,12 +15,15 @@ export const metadata: Metadata = {
   authors: [{ name: "Rahul Kumar" }],
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon.png", type: "image/png" },
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.png", type: "image/png", sizes: "48x48" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
     ],
-    apple: "/favicon.png",
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
+  manifest: "/manifest.json",
   openGraph: {
     title: "Order Wala - Fresh Groceries & Food Delivery",
     description: "Your one-stop destination for fresh groceries and delicious food delivery.",
