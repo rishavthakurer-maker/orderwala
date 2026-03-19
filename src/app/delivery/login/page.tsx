@@ -55,14 +55,14 @@ export default function DeliveryLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-secondary-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-6">
             <img src="/logo.png" alt="Order Wala" className="h-12 w-auto mx-auto" />
           </Link>
-          <div className="mx-auto mb-4 h-16 w-16 bg-linear-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+          <div className="mx-auto mb-4 h-16 w-16 bg-linear-to-br from-orange-500 to-secondary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
             <Bike className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-extrabold text-gray-900">Delivery Partner Login</h1>
@@ -90,7 +90,7 @@ export default function DeliveryLoginPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700" disabled={isLoading}>
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
@@ -98,7 +98,7 @@ export default function DeliveryLoginPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">
               Want to become a delivery partner?{' '}
-              <Link href="/delivery/register" className="text-blue-600 hover:underline font-medium">Register here</Link>
+              <Link href="/delivery/register" className="text-orange-600 hover:underline font-medium">Register here</Link>
             </p>
             <p className="text-sm text-gray-400 mt-2">
               Buyer?{' '}

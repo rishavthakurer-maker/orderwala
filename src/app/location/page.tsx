@@ -165,12 +165,12 @@ function LocationPageContent() {
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                <MapPinned className="h-4 w-4 text-orange-600" />
+                <MapPinned className="h-4 w-4 text-secondary-600" />
                 Delivery Address Details
               </h3>
               <button
                 onClick={() => setManualMode(!manualMode)}
-                className="text-xs text-orange-600 hover:underline"
+                className="text-xs text-secondary-600 hover:underline"
               >
                 {manualMode ? 'Use map instead' : 'Enter manually'}
               </button>
@@ -245,8 +245,8 @@ function LocationPageContent() {
               }}
               className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 flex items-center gap-3"
             >
-              <div className="p-2 bg-orange-50 rounded-lg">
-                <Home className="h-4 w-4 text-orange-600" />
+              <div className="p-2 bg-secondary-50 rounded-lg">
+                <Home className="h-4 w-4 text-secondary-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{currentLocation.address}</p>

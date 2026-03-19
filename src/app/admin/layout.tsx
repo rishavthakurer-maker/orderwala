@@ -122,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-orange-600 text-white'
+                        ? 'bg-linear-to-r from-orange-500 to-secondary-600 text-white'
                         : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     )}
                     onClick={() => setIsSidebarOpen(false)}

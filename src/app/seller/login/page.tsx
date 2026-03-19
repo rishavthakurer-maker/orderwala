@@ -62,14 +62,14 @@ export default function SellerLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-secondary-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-6">
             <img src="/logo.png" alt="Order Wala" className="h-12 w-auto mx-auto" />
           </Link>
-          <div className="mx-auto mb-4 h-16 w-16 bg-linear-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
+          <div className="mx-auto mb-4 h-16 w-16 bg-linear-to-br from-orange-500 to-secondary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
             <Store className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-extrabold text-gray-900">Seller Login</h1>

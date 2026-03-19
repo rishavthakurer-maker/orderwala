@@ -111,7 +111,7 @@ export default function OffersPage() {
             {offers.map((offer) => (
               <Card key={offer.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Discount Header */}
-                <div className="bg-linear-to-r from-orange-500 to-amber-500 px-6 py-4 text-white">
+                <div className="bg-linear-to-r from-orange-500 to-secondary-500 px-6 py-4 text-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {offer.discountType === 'percentage' ? (

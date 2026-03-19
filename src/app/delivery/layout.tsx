@@ -105,8 +105,8 @@ export default function DeliveryLayout({
 
           <div className="p-4 border-b">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 font-bold">{partnerInitial}</span>
+              <div className="h-12 w-12 bg-secondary-100 rounded-full flex items-center justify-center">
+                <span className="text-secondary-700 font-bold">{partnerInitial}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 truncate">{partnerName}</p>
@@ -123,7 +123,7 @@ export default function DeliveryLayout({
               const isActive = pathname === item.href || (item.href !== '/delivery' && pathname.startsWith(item.href));
               const Icon = item.icon;
               return (
-                <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`} onClick={() => setSidebarOpen(false)}>
+                <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-secondary-50 text-secondary-700' : 'text-gray-700 hover:bg-gray-100'}`} onClick={() => setSidebarOpen(false)}>
                   <Icon className="h-5 w-5" />
                   {item.label}
                 </Link>

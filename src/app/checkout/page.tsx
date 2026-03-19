@@ -268,7 +268,7 @@ export default function CheckoutPage() {
         email: session?.user?.email || '',
         contact: selectedAddress?.phone || '',
       },
-      theme: { color: '#f97316' },
+      theme: { color: '#f07800' },
       modal: {
         ondismiss: () => {
           setIsProcessing(false);

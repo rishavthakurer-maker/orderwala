@@ -86,13 +86,13 @@ function OrderSuccessContent() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center"><Clock className="h-5 w-5 text-orange-600" /></div>
+              <div className="h-10 w-10 bg-secondary-100 rounded-full flex items-center justify-center"><Clock className="h-5 w-5 text-secondary-600" /></div>
               <div><p className="font-medium">Estimated Delivery</p><p className="text-sm text-gray-500">30-45 mins</p></div>
             </div>
 
             {address && (
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center"><MapPin className="h-5 w-5 text-orange-600" /></div>
+                <div className="h-10 w-10 bg-secondary-100 rounded-full flex items-center justify-center"><MapPin className="h-5 w-5 text-secondary-600" /></div>
                 <div><p className="font-medium">Delivering to</p><p className="text-sm text-gray-500 line-clamp-2">{address}</p></div>
               </div>
             )}

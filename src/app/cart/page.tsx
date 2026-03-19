@@ -197,10 +197,10 @@ export default function CartPage() {
               {/* Promo Code */}
               <div className="mb-4">
                 {appliedPromo ? (
-                  <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between bg-secondary-50 border border-secondary-200 rounded-lg p-3">
                     <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-orange-600" />
-                      <span className="text-sm font-medium text-orange-800">
+                      <Tag className="h-4 w-4 text-secondary-600" />
+                      <span className="text-sm font-medium text-secondary-800">
                         {appliedPromo.code}
                       </span>
                     </div>
@@ -238,12 +238,12 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Delivery Fee</span>
-                  <span className={deliveryFee === 0 ? 'text-orange-600 font-medium' : 'font-medium'}>
+                  <span className={deliveryFee === 0 ? 'text-secondary-600 font-medium' : 'font-medium'}>
                     {deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}
                   </span>
                 </div>
                 {appliedPromo && (
-                  <div className="flex justify-between text-orange-600">
+                  <div className="flex justify-between text-secondary-600">
                     <span>Discount ({appliedPromo.code})</span>
                     <span className="font-medium">-{formatPrice(appliedPromo.discount)}</span>
                   </div>

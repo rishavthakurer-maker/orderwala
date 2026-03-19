@@ -4,7 +4,7 @@ import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'luci
 export function Footer() {
   return (
     <footer className="bg-linear-to-b from-gray-900 to-gray-950 text-gray-300 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-orange-500/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-orange-500/50 to-secondary-500/50" />
       <div className="container mx-auto px-4 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
@@ -116,8 +116,8 @@ export function Footer() {
             <h3 className="text-white font-bold mb-5 text-sm uppercase tracking-wider">Contact Us</h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <div className="h-9 w-9 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <MapPin className="h-4 w-4 text-orange-400" />
+                <div className="h-9 w-9 rounded-xl bg-secondary-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <MapPin className="h-4 w-4 text-secondary-400" />
                 </div>
                 <span className="text-sm leading-relaxed">
                   123 Main Street, Patna<br />
@@ -125,18 +125,18 @@ export function Footer() {
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
-                  <Phone className="h-4 w-4 text-orange-400" />
+                <div className="h-9 w-9 rounded-xl bg-secondary-500/10 flex items-center justify-center shrink-0">
+                  <Phone className="h-4 w-4 text-secondary-400" />
                 </div>
-                <a href="tel:+919876543210" className="text-sm hover:text-orange-400 transition-colors">
+                <a href="tel:+919876543210" className="text-sm hover:text-secondary-400 transition-colors">
                   +91 98765 43210
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
-                  <Mail className="h-4 w-4 text-orange-400" />
+                <div className="h-9 w-9 rounded-xl bg-secondary-500/10 flex items-center justify-center shrink-0">
+                  <Mail className="h-4 w-4 text-secondary-400" />
                 </div>
-                <a href="mailto:support@orderwala.com" className="text-sm hover:text-orange-400 transition-colors">
+                <a href="mailto:support@orderwala.com" className="text-sm hover:text-secondary-400 transition-colors">
                   support@orderwala.com
                 </a>
               </li>
@@ -151,7 +151,7 @@ export function Footer() {
               © {new Date().getFullYear()} Order Wala. All rights reserved.
             </p>
             <p className="text-sm text-gray-500">
-              Made by <span className="text-orange-400 font-medium">KRA Tech Solutions</span>
+              Made by <span className="text-secondary-400 font-medium">KRA Tech Solutions</span>
             </p>
           </div>
         </div>

@@ -150,7 +150,7 @@ function SearchContent() {
                     </Link>
                     <div className="p-3">
                       <Link href={`/product/${id}`}>
-                        <h3 className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-orange-600">{product.name}</h3>
+                        <h3 className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-secondary-700">{product.name}</h3>
                       </Link>
                       <p className="text-xs text-gray-500 mt-0.5">{vendorName}</p>
                       <div className="flex items-center gap-1 mt-1">

@@ -275,9 +275,9 @@ export default function AdminDashboard() {
                 <p className="text-2xl font-bold text-blue-600">12</p>
                 <p className="text-sm text-blue-700">On the way</p>
               </div>
-              <div className="rounded-lg bg-green-50 p-4 text-center">
-                <p className="text-2xl font-bold text-green-600">145</p>
-                <p className="text-sm text-green-700">Delivered Today</p>
+              <div className="rounded-lg bg-secondary-50 p-4 text-center">
+                <p className="text-2xl font-bold text-secondary-600">145</p>
+                <p className="text-sm text-secondary-700">Delivered Today</p>
               </div>
             </div>
           </CardContent>

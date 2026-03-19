@@ -218,7 +218,7 @@ export default function AccountPage() {
         </Card>
 
         {/* Referral Banner */}
-        <Card className="bg-linear-to-r from-purple-500 to-pink-500 text-white">
+        <Card className="bg-linear-to-r from-orange-500 to-secondary-600 text-white">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <Gift className="h-12 w-12" />
@@ -226,7 +226,7 @@ export default function AccountPage() {
                 <h3 className="font-bold text-lg">Refer & Earn Rs.100</h3>
                 <p className="text-white/80 text-sm">Invite friends and earn rewards on their first order</p>
               </div>
-              <Button className="bg-white text-purple-600 hover:bg-gray-100">Share</Button>
+              <Button className="bg-white text-secondary-700 hover:bg-gray-100">Share</Button>
             </div>
           </CardContent>
         </Card>

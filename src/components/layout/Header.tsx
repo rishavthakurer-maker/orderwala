@@ -111,9 +111,9 @@ export function Header() {
           </Link>
 
           {/* Location Picker - Desktop */}
-          <button onClick={() => router.push('/location')} className="hidden lg:flex items-center gap-2.5 rounded-xl border border-gray-200 px-3.5 py-2 hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 group-hover:bg-orange-200 transition-colors">
-              <MapPin className="h-4 w-4 text-orange-600" />
+          <button onClick={() => router.push('/location')} className="hidden lg:flex items-center gap-2.5 rounded-xl border border-gray-200 px-3.5 py-2 hover:border-secondary-400 hover:bg-secondary-50/50 transition-all duration-200 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary-100 group-hover:bg-secondary-200 transition-colors">
+              <MapPin className="h-4 w-4 text-secondary-600" />
             </div>
             <div className="text-left">
               <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Deliver to</p>
@@ -174,7 +174,7 @@ export function Header() {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200"
                 >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-linear-to-br from-orange-500 to-amber-600 text-white text-xs font-bold">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-linear-to-br from-orange-500 to-secondary-600 text-white text-xs font-bold">
                     {session.user?.name?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <span className="text-sm font-medium text-gray-700">{session.user?.name?.split(' ')[0]}</span>
@@ -235,7 +235,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/login">
-                <Button size="sm" className="rounded-xl bg-linear-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 shadow-md shadow-orange-200 px-5">Login</Button>
+                <Button size="sm" className="rounded-xl bg-linear-to-r from-orange-500 to-secondary-600 hover:from-orange-600 hover:to-secondary-700 shadow-md shadow-orange-200/50 px-5">Login</Button>
               </Link>
             )}
           </div>
@@ -269,9 +269,9 @@ export function Header() {
         <div className="lg:hidden border-t border-gray-100 bg-white animate-fade-in">
           <div className="container mx-auto px-4 py-4">
             {/* Location */}
-            <button onClick={() => { setIsMenuOpen(false); router.push('/location'); }} className="flex items-center gap-3 w-full rounded-xl border border-gray-200 p-3.5 mb-4 hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100">
-                <MapPin className="h-4 w-4 text-orange-600" />
+            <button onClick={() => { setIsMenuOpen(false); router.push('/location'); }} className="flex items-center gap-3 w-full rounded-xl border border-gray-200 p-3.5 mb-4 hover:border-secondary-400 hover:bg-secondary-50/50 transition-all duration-200">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary-100">
+                <MapPin className="h-4 w-4 text-secondary-600" />
               </div>
               <div className="text-left flex-1">
                 <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Deliver to</p>
@@ -341,7 +341,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full rounded-xl bg-linear-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 shadow-md shadow-orange-200">Login</Button>
+                <Button className="w-full rounded-xl bg-linear-to-r from-orange-500 to-secondary-600 hover:from-orange-600 hover:to-secondary-700 shadow-md shadow-orange-200/50">Login</Button>
               </Link>
             )}
           </div>

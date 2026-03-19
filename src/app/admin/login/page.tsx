@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-primary-600 to-primary-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-primary-600 to-secondary-700 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardContent className="p-8">
           {/* Logo */}

@@ -46,7 +46,7 @@ export function BottomNav() {
                     <Icon className={cn('h-5 w-5 transition-all duration-200', isActive && 'scale-110')} />
                   </div>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -right-1.5 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-600 text-[9px] font-bold text-white shadow-lg shadow-orange-200 ring-2 ring-white">
+                    <span className="absolute -right-1.5 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-secondary-600 text-[9px] font-bold text-white shadow-lg shadow-secondary-200 ring-2 ring-white">
                       {item.badge > 9 ? '9+' : item.badge}
                     </span>
                   )}
